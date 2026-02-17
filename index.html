@@ -81,16 +81,6 @@
         margin: 0;
       }
 
-      .badge {
-        border: 1px solid var(--border);
-        padding: 10px 16px;
-        border-radius: 999px;
-        background: linear-gradient(120deg, rgba(90, 208, 255, 0.16), rgba(255, 122, 162, 0.16));
-        font-size: 13px;
-        color: var(--ink);
-        box-shadow: var(--glow);
-      }
-
       .grid {
         display: grid;
         grid-template-columns: repeat(12, 1fr);
@@ -128,13 +118,18 @@
       }
 
       .panel.instagram {
-        grid-column: span 5;
+        grid-column: span 4;
         background: linear-gradient(160deg, rgba(255, 122, 162, 0.12), rgba(18, 21, 34, 0.9));
       }
 
       .panel.bookings {
-        grid-column: span 7;
+        grid-column: span 5;
         background: linear-gradient(160deg, rgba(124, 242, 181, 0.08), rgba(18, 21, 34, 0.9));
+      }
+
+      .panel.radio {
+        grid-column: span 3;
+        background: linear-gradient(160deg, rgba(242, 201, 76, 0.14), rgba(18, 21, 34, 0.9));
       }
 
       .panel.schedule {
@@ -249,6 +244,80 @@
         box-shadow: 0 10px 25px rgba(242, 201, 76, 0.25);
       }
 
+      .radio-shell {
+        margin-top: 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 12px;
+        background: rgba(12, 16, 28, 0.75);
+        min-height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .RP-SCRIPT {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 120px;
+        border-radius: 14px;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        background: linear-gradient(120deg, rgba(242, 201, 76, 0.1), rgba(90, 208, 255, 0.06));
+      }
+
+      .RP-LINK {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        color: var(--ink);
+        background: rgba(15, 20, 32, 0.9);
+        border: 1px solid rgba(242, 201, 76, 0.4);
+        box-shadow: 0 12px 28px rgba(242, 201, 76, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .RP-LINK::before {
+        content: "▶";
+        font-size: 12px;
+        color: var(--accent);
+      }
+
+      .RP-LINK:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 34px rgba(242, 201, 76, 0.28);
+      }
+
+      .radio-date {
+        margin-top: 22px;
+        display: grid;
+        gap: 6px;
+        text-align: center;
+      }
+
+      .radio-date .num {
+        font-family: "Rubik", system-ui, sans-serif;
+        font-size: 88px;
+        letter-spacing: 1px;
+      }
+
+      .radio-date .month {
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 16px;
+        color: var(--muted);
+      }
+
+      .radio-date .weekday {
+        font-size: 18px;
+        color: var(--ink);
+      }
+
       .week {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -325,7 +394,8 @@
         }
 
         .panel.instagram,
-        .panel.bookings {
+        .panel.bookings,
+        .panel.radio {
           grid-column: span 12;
         }
 
@@ -378,7 +448,6 @@
           <h1 class="title">Летние смены · Центр управления</h1>
           <p class="subtitle">Единая панель для аналитики Instagram и бронирований лагеря</p>
         </div>
-        <div class="badge" id="dateBadge">Сегодня</div>
       </header>
 
       <section class="grid">
@@ -493,7 +562,24 @@
           </div>
         </article>
 
-        <article class="panel schedule fade-in delay-2">
+        <article class="panel radio fade-in delay-2">
+          <div>
+            <h3>Радиоэфир</h3>
+            <p>Фоновая трансляция для рабочей атмосферы</p>
+          </div>
+          <div class="radio-shell">
+            <div class="RP-SCRIPT" data-style="dark">
+              <a class="RP-LINK" href="https://radiopotok.ru/">RadioPotok.ru</a>
+            </div>
+          </div>
+          <div class="radio-date" aria-label="Сегодняшняя дата">
+            <div class="num" id="radioDay">—</div>
+            <div class="month" id="radioMonth">—</div>
+            <div class="weekday" id="radioWeekday">—</div>
+          </div>
+        </article>
+
+        <article class="panel schedule fade-in delay-3">
           <div>
             <h3>Расписание недели</h3>
             <p>Фокус на активности, которые влияют на продажи и заполнение смен</p>
@@ -553,20 +639,26 @@
       <div class="footer-note">Данные обновлены: <span id="updatedAt">—</span></div>
     </div>
 
+    <script defer src="https://radiopotok.ru/f/script6/16e18ac98844452e0eba34f615bdeaad8ba8a53a7e59e232de17502a17cd57d3.js" charset="UTF-8"></script>
     <script>
       const now = new Date();
       const locale = "ru-RU";
 
-      const dateBadge = document.getElementById("dateBadge");
+      const radioDay = document.getElementById("radioDay");
+      const radioMonth = document.getElementById("radioMonth");
+      const radioWeekday = document.getElementById("radioWeekday");
       const todayName = document.getElementById("todayName");
       const updatedAt = document.getElementById("updatedAt");
       const weekGrid = document.getElementById("weekGrid");
 
       const dayName = now.toLocaleDateString(locale, { weekday: "long" });
       const dayNumber = now.toLocaleDateString(locale, { day: "numeric" });
-      const monthName = now.toLocaleDateString(locale, { month: "long" });
+      const dayMonth = now.toLocaleDateString(locale, { day: "numeric", month: "long" });
+      const monthName = dayMonth.split(" ").slice(1).join(" ");
 
-      dateBadge.textContent = `${dayNumber} ${monthName}, ${dayName}`;
+      radioDay.textContent = dayNumber;
+      radioMonth.textContent = monthName;
+      radioWeekday.textContent = dayName;
       todayName.textContent = dayName.charAt(0).toUpperCase() + dayName.slice(1);
       updatedAt.textContent = now.toLocaleString(locale, { dateStyle: "short", timeStyle: "short" });
 
