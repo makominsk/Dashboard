@@ -159,13 +159,14 @@ async function getDashboard(env) {
 }
 
 async function syncInstagram(env) {
+  // v2.0: Fixed tool names and date formats
   const now = new Date();
   const sinceDate = new Date(now.getTime() - 365 * 86400000);
   const untilDate = new Date(now.getTime());
   
-  // Convert to ISO date strings (YYYY-MM-DD format) as expected by Composio
-  const since = sinceDate.toISOString().split('T')[0];
-  const until = untilDate.toISOString().split('T')[0];
+  // Get daily user insights
+  const since_str = sinceDate.toISOString().split('T')[0];
+  const until_str = untilDate.toISOString().split('T')[0];
 
   const dailyInsights = await fetchComposio(
     env,
@@ -175,8 +176,8 @@ async function syncInstagram(env) {
       ig_user_id: env.IG_USER_ID,
       metric: ["reach", "total_interactions", "saves", "follower_count"],
       period: "day",
-      since,
-      until,
+      since: since_str,
+      until: until_str,
     }
   );
 
@@ -230,15 +231,18 @@ async function syncInstagram(env) {
       .run();
   }
 
+  // Get media posts from last 90 days
   const mediaSinceDate = new Date(now.getTime() - 90 * 86400000);
-  const mediaSince = mediaSinceDate.toISOString().split('T')[0];
+  const since_unix = parseInt(Math.floor(mediaSinceDate.getTime() / 1000));
+  const until_unix = parseInt(Math.floor(now.getTime() / 1000));
+  
   const media = await fetchComposio(
     env,
     env.COMPOSIO_CONN_IG,
     "INSTAGRAM_GET_USER_MEDIA",
     {
-      since: parseInt(Math.floor(mediaSinceDate.getTime() / 1000)),
-      until: parseInt(Math.floor(now.getTime() / 1000)),
+      since: since_unix,
+      until: until_unix,
       fields: "id,timestamp,media_type",
     }
   );
@@ -247,7 +251,8 @@ async function syncInstagram(env) {
 
   for (const item of mediaItems) {
     if (!item?.id) continue;
-    const insights = await fetchComposio(
+    
+    const postInsights = await fetchComposio(
       env,
       env.COMPOSIO_CONN_IG,
       "INSTAGRAM_GET_POST_INSIGHTS",
@@ -257,7 +262,7 @@ async function syncInstagram(env) {
       }
     );
 
-    const insightMap = normalizeMediaInsights(insights);
+    const insightMap = normalizeMediaInsights(postInsights);
     await env.DB.prepare(
       `INSERT INTO instagram_post_metrics (post_id, date, reach, likes, comments, saves, shares)
        VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -307,14 +312,16 @@ async function syncSheets(env) {
     const valuesResponse = await fetchComposio(
       env,
       env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
-      "GOOGLESHEETS_VALUES_GET",
+      "GOOGLESHEETS_BATCH_GET",
       {
         spreadsheet_id: env.SHEETS_ID,
-        range,
+        ranges: [range],
       }
     );
 
-    const values = valuesResponse?.data?.values || valuesResponse?.values || [];
+    const values = valuesResponse?.data?.valueRanges?.[0]?.values || 
+                   valuesResponse?.valueRanges?.[0]?.values || 
+                   valuesResponse?.values || [];
     if (!values.length) continue;
 
     const headers = values[0].map((h) => String(h || "").trim());

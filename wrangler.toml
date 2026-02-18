@@ -1,6 +1,6 @@
 name = "dashboard-backend"
 main = "src/worker.js"
-compatibility_date = "2026-02-17"
+compatibility_date = "2026-02-18"
 
 [vars]
 COMPOSIO_API_BASE = "https://backend.composio.dev"
