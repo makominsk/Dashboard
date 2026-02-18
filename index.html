@@ -1,895 +1,934 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Панель мониторинга — Летние смены</title>
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Rubik:wght@300;400;500;700&display=swap");
 
-      :root {
-        --bg: #0b0d14;
-        --bg-2: #141826;
-        --panel: #121522;
-        --panel-2: #0f1420;
-        --ink: #e9edf8;
-        --muted: #aab2c8;
-        --accent: #f2c94c;
-        --accent-2: #5ad0ff;
-        --accent-3: #ff7aa2;
-        --success: #7cf2b5;
-        --border: rgba(255, 255, 255, 0.08);
-        --shadow: 0 20px 60px rgba(5, 8, 20, 0.6);
-        --glow: 0 0 60px rgba(90, 208, 255, 0.18);
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Панель мониторинга — Летние смены</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Rubik:wght@300;400;500;700&display=swap");
 
-      * {
-        box-sizing: border-box;
-      }
+    :root {
+      --bg: #0b0d14;
+      --bg-2: #141826;
+      --panel: #121522;
+      --panel-2: #0f1420;
+      --ink: #e9edf8;
+      --muted: #aab2c8;
+      --accent: #f2c94c;
+      --accent-2: #5ad0ff;
+      --accent-3: #ff7aa2;
+      --success: #7cf2b5;
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 20px 60px rgba(5, 8, 20, 0.6);
+      --glow: 0 0 60px rgba(90, 208, 255, 0.18);
+    }
 
-      html,
-      body {
-        height: 100%;
-      }
+    * {
+      box-sizing: border-box;
+    }
 
-      body {
-        margin: 0;
-        font-family: "Rubik", system-ui, sans-serif;
-        color: var(--ink);
-        background: radial-gradient(1200px 800px at 10% -20%, #1a2741 0%, transparent 70%),
-          radial-gradient(1000px 600px at 90% 0%, #2d1d3e 0%, transparent 70%),
-          radial-gradient(900px 700px at 70% 100%, #133337 0%, transparent 70%),
-          var(--bg);
-        min-height: 100vh;
-      }
+    html,
+    body {
+      height: 100%;
+    }
 
-      .noise {
-        position: fixed;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
-        pointer-events: none;
-        mix-blend-mode: soft-light;
-        z-index: 0;
-      }
+    body {
+      margin: 0;
+      font-family: "Rubik", system-ui, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 800px at 10% -20%, #1a2741 0%, transparent 70%),
+        radial-gradient(1000px 600px at 90% 0%, #2d1d3e 0%, transparent 70%),
+        radial-gradient(900px 700px at 70% 100%, #133337 0%, transparent 70%),
+        var(--bg);
+      min-height: 100vh;
+    }
 
-      .wrap {
-        position: relative;
-        z-index: 1;
-        max-width: 1240px;
-        margin: 0 auto;
-        padding: 36px 28px 60px;
-      }
+    .noise {
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 0;
+    }
 
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 36px 28px 60px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-family: "Fraunces", serif;
+      font-size: clamp(28px, 3vw, 42px);
+      letter-spacing: 0.5px;
+      margin: 0 0 6px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 22px;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(400px 200px at 0% 0%, rgba(90, 208, 255, 0.08), transparent 60%);
+      pointer-events: none;
+    }
+
+    .panel h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      letter-spacing: 0.3px;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .panel.instagram {
+      grid-column: span 4;
+      background: linear-gradient(160deg, rgba(255, 122, 162, 0.12), rgba(18, 21, 34, 0.9));
+    }
+
+    .panel.bookings {
+      grid-column: span 5;
+      background: linear-gradient(160deg, rgba(124, 242, 181, 0.08), rgba(18, 21, 34, 0.9));
+    }
+
+    .panel.radio {
+      grid-column: span 3;
+      background: linear-gradient(160deg, rgba(242, 201, 76, 0.14), rgba(18, 21, 34, 0.9));
+    }
+
+    .panel.schedule {
+      grid-column: span 12;
+      display: grid;
+      grid-template-columns: 2.2fr 1fr;
+      gap: 20px;
+      background: linear-gradient(160deg, rgba(90, 208, 255, 0.08), rgba(18, 21, 34, 0.9));
+    }
+
+    .metrics {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .metric {
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(12, 16, 28, 0.75);
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.2px;
+    }
+
+    .metric .value {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 6px 0;
+    }
+
+    .metric .delta {
+      font-size: 12px;
+      color: var(--success);
+    }
+
+    .spark {
+      height: 64px;
+      margin-top: 8px;
+    }
+
+    .spark svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .table {
+      margin-top: 18px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: rgba(15, 20, 32, 0.9);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-size: 11px;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(242, 201, 76, 0.5);
+      background: rgba(242, 201, 76, 0.12);
+      color: var(--accent);
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(242, 201, 76, 0.25);
+    }
+
+    .radio-shell {
+      margin-top: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 12px;
+      background: rgba(12, 16, 28, 0.75);
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .RP-SCRIPT {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      background: linear-gradient(120deg, rgba(242, 201, 76, 0.1), rgba(90, 208, 255, 0.06));
+    }
+
+    .RP-LINK {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--ink);
+      background: rgba(15, 20, 32, 0.9);
+      border: 1px solid rgba(242, 201, 76, 0.4);
+      box-shadow: 0 12px 28px rgba(242, 201, 76, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .RP-LINK::before {
+      content: "▶";
+      font-size: 12px;
+      color: var(--accent);
+    }
+
+    .RP-LINK:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(242, 201, 76, 0.28);
+    }
+
+    .radio-date {
+      margin-top: 22px;
+      display: grid;
+      gap: 6px;
+      text-align: center;
+    }
+
+    .radio-date .num {
+      font-family: "Rubik", system-ui, sans-serif;
+      font-size: 88px;
+      letter-spacing: 1px;
+    }
+
+    .radio-date .month {
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 16px;
+      color: var(--muted);
+    }
+
+    .radio-date .weekday {
+      font-size: 18px;
+      color: var(--ink);
+    }
+
+    .week {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .day {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 12px;
+      min-height: 112px;
+      background: rgba(12, 16, 28, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .day .name {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .day .plan {
+      font-size: 12px;
+    }
+
+    .day.today {
+      border-color: rgba(90, 208, 255, 0.6);
+      background: rgba(90, 208, 255, 0.12);
+      box-shadow: var(--glow);
+    }
+
+    .today-card {
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      padding: 18px;
+      background: rgba(12, 16, 28, 0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .today-card h4 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .today-card .big {
+      font-family: "Fraunces", serif;
+      font-size: 28px;
+    }
+
+    .today-list {
+      display: grid;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .footer-note {
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    @media (max-width: 980px) {
       header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 24px;
-        margin-bottom: 32px;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: flex-start;
       }
 
-      .header-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      .title {
-        font-family: "Fraunces", serif;
-        font-size: clamp(28px, 3vw, 42px);
-        letter-spacing: 0.5px;
-        margin: 0 0 6px;
-      }
-
-      .subtitle {
-        color: var(--muted);
-        font-size: 14px;
-        margin: 0;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 22px;
-      }
-
-      .panel {
-        background: linear-gradient(160deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 22px 24px;
-        box-shadow: var(--shadow);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .panel::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(400px 200px at 0% 0%, rgba(90, 208, 255, 0.08), transparent 60%);
-        pointer-events: none;
-      }
-
-      .panel h3 {
-        margin: 0 0 8px;
-        font-size: 18px;
-        letter-spacing: 0.3px;
-      }
-
-      .panel p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      .panel.instagram {
-        grid-column: span 4;
-        background: linear-gradient(160deg, rgba(255, 122, 162, 0.12), rgba(18, 21, 34, 0.9));
-      }
-
-      .panel.bookings {
-        grid-column: span 5;
-        background: linear-gradient(160deg, rgba(124, 242, 181, 0.08), rgba(18, 21, 34, 0.9));
-      }
-
+      .panel.instagram,
+      .panel.bookings,
       .panel.radio {
-        grid-column: span 3;
-        background: linear-gradient(160deg, rgba(242, 201, 76, 0.14), rgba(18, 21, 34, 0.9));
+        grid-column: span 12;
       }
 
       .panel.schedule {
-        grid-column: span 12;
-        display: grid;
-        grid-template-columns: 2.2fr 1fr;
-        gap: 20px;
-        background: linear-gradient(160deg, rgba(90, 208, 255, 0.08), rgba(18, 21, 34, 0.9));
+        grid-template-columns: 1fr;
       }
+    }
 
+    @media (max-width: 720px) {
       .metrics {
-        margin-top: 18px;
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-      }
-
-      .metric {
-        padding: 16px;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        background: rgba(12, 16, 28, 0.75);
-      }
-
-      .metric .label {
-        color: var(--muted);
-        font-size: 12px;
-        letter-spacing: 0.2px;
-      }
-
-      .metric .value {
-        font-size: 22px;
-        font-weight: 600;
-        margin: 6px 0;
-      }
-
-      .metric .delta {
-        font-size: 12px;
-        color: var(--success);
-      }
-
-      .spark {
-        height: 64px;
-        margin-top: 8px;
-      }
-
-      .spark svg {
-        width: 100%;
-        height: 100%;
-      }
-
-      .table {
-        margin-top: 18px;
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid var(--border);
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-      }
-
-      thead {
-        background: rgba(15, 20, 32, 0.9);
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-        font-size: 11px;
-      }
-
-      th,
-      td {
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--border);
-        text-align: left;
-      }
-
-      tbody tr:hover {
-        background: rgba(255, 255, 255, 0.04);
-      }
-
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: rgba(0, 0, 0, 0.2);
-        font-size: 11px;
-        color: var(--muted);
-      }
-
-      .cta {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        border-radius: 10px;
-        border: 1px solid rgba(242, 201, 76, 0.5);
-        background: rgba(242, 201, 76, 0.12);
-        color: var(--accent);
-        font-size: 12px;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      .cta:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 25px rgba(242, 201, 76, 0.25);
-      }
-
-      .radio-shell {
-        margin-top: 16px;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        padding: 12px;
-        background: rgba(12, 16, 28, 0.75);
-        min-height: 160px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .RP-SCRIPT {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 120px;
-        border-radius: 14px;
-        border: 1px dashed rgba(255, 255, 255, 0.12);
-        background: linear-gradient(120deg, rgba(242, 201, 76, 0.1), rgba(90, 208, 255, 0.06));
-      }
-
-      .RP-LINK {
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 16px;
-        border-radius: 12px;
-        font-size: 13px;
-        color: var(--ink);
-        background: rgba(15, 20, 32, 0.9);
-        border: 1px solid rgba(242, 201, 76, 0.4);
-        box-shadow: 0 12px 28px rgba(242, 201, 76, 0.2);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      .RP-LINK::before {
-        content: "▶";
-        font-size: 12px;
-        color: var(--accent);
-      }
-
-      .RP-LINK:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 16px 34px rgba(242, 201, 76, 0.28);
-      }
-
-      .radio-date {
-        margin-top: 22px;
-        display: grid;
-        gap: 6px;
-        text-align: center;
-      }
-
-      .radio-date .num {
-        font-family: "Rubik", system-ui, sans-serif;
-        font-size: 88px;
-        letter-spacing: 1px;
-      }
-
-      .radio-date .month {
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        font-size: 16px;
-        color: var(--muted);
-      }
-
-      .radio-date .weekday {
-        font-size: 18px;
-        color: var(--ink);
+        grid-template-columns: 1fr;
       }
 
       .week {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 10px;
-        margin-top: 16px;
+        grid-template-columns: repeat(2, 1fr);
       }
+    }
 
-      .day {
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        padding: 12px;
-        min-height: 112px;
-        background: rgba(12, 16, 28, 0.7);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+    .fade-in {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: rise 0.9s ease forwards;
+    }
+
+    .fade-in.delay-1 {
+      animation-delay: 0.15s;
+    }
+
+    .fade-in.delay-2 {
+      animation-delay: 0.3s;
+    }
+
+    .fade-in.delay-3 {
+      animation-delay: 0.45s;
+    }
+
+    @keyframes rise {
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
+    }
+  </style>
+</head>
 
-      .day .name {
-        font-size: 11px;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-      }
+<body>
+  <div class="noise"></div>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1 class="title">Летние смены · Центр управления</h1>
+        <p class="subtitle">Единая панель для аналитики Instagram и бронирований лагеря</p>
+      </div>
+      <div class="header-actions">
+        <button class="cta" id="refreshAllBtn" type="button">Обновить все данные</button>
+      </div>
+    </header>
 
-      .day .plan {
-        font-size: 12px;
-      }
+    <section class="grid">
+      <article class="panel instagram fade-in">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <div>
+            <h3>Instagram аналитика</h3>
+            <p>Сводка по публикациям за 7 дней</p>
+          </div>
+          <button class="cta" id="refreshInstagramBtn" type="button">Обновить</button>
+        </div>
 
-      .day.today {
-        border-color: rgba(90, 208, 255, 0.6);
-        background: rgba(90, 208, 255, 0.12);
-        box-shadow: var(--glow);
-      }
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">Показы</div>
+            <div class="value">182 430</div>
+            <div class="delta">+18% к прошлой неделе</div>
+            <div class="spark">
+              <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 52C18 44 30 20 44 22C58 24 66 46 80 44C94 42 110 18 124 18C138 18 150 36 156 30"
+                  stroke="#5AD0FF" stroke-width="3" stroke-linecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div class="metric">
+            <div class="label">Охват</div>
+            <div class="value">96 210</div>
+            <div class="delta">+12% органика</div>
+            <div class="spark">
+              <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 42C18 34 28 30 44 34C60 38 66 50 80 48C94 46 106 22 124 22C142 22 152 40 156 36"
+                  stroke="#F2C94C" stroke-width="3" stroke-linecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div class="metric">
+            <div class="label">Вовлечённость</div>
+            <div class="value">8,6%</div>
+            <div class="delta">+0,9 п.п.</div>
+            <div class="spark">
+              <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 50C20 54 30 40 44 36C58 32 66 44 80 40C94 36 110 26 124 26C138 26 150 38 156 32"
+                  stroke="#FF7AA2" stroke-width="3" stroke-linecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div class="metric">
+            <div class="label">Сохранения</div>
+            <div class="value">12 940</div>
+            <div class="delta">+5% по топ-постам</div>
+            <div class="spark">
+              <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 48C18 40 28 24 44 24C60 24 66 42 80 40C94 38 110 26 124 26C138 26 150 34 156 28"
+                  stroke="#7CF2B5" stroke-width="3" stroke-linecap="round" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </article>
 
-      .today-card {
-        border-radius: 20px;
-        border: 1px solid var(--border);
-        padding: 18px;
-        background: rgba(12, 16, 28, 0.8);
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
+      <article class="panel bookings fade-in delay-1">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <div>
+            <h3>Бронирования смен</h3>
+            <p>Обновления из Google Sheets за сегодня</p>
+          </div>
+          <span class="chip">Синхронизация: каждые 30 мин</span>
+        </div>
 
-      .today-card h4 {
-        margin: 0;
-        font-size: 16px;
-      }
+        <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;">
+          <span class="chip">1 смена · 07.06–19.06</span>
+          <span class="chip">2 смена · 21.06–03.07</span>
+          <span class="chip">3 смена · 05.07–17.07</span>
+          <span class="chip">4 смена · 19.07–31.07</span>
+          <span class="chip">5 смена · 02.08–14.08</span>
+          <span class="chip">6 смена · 16.08–28.08</span>
+        </div>
 
-      .today-card .big {
-        font-family: "Fraunces", serif;
-        font-size: 28px;
-      }
+        <div class="table">
+          <table>
+            <thead>
+              <tr>
+                <th>Смена</th>
+                <th>ФИО ребёнка</th>
+                <th>Телефон</th>
+                <th>Родитель</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1 смена · 07.06–19.06</td>
+                <td>Соколова Анна Михайловна</td>
+                <td>+7 999 123-45-67</td>
+                <td>Соколова Ирина</td>
+              </tr>
+              <tr>
+                <td>2 смена · 21.06–03.07</td>
+                <td>Петров Кирилл Андреевич</td>
+                <td>+7 921 555-22-11</td>
+                <td>Петрова Марина</td>
+              </tr>
+              <tr>
+                <td>3 смена · 05.07–17.07</td>
+                <td>Герасимова Алиса Олеговна</td>
+                <td>+7 901 447-90-10</td>
+                <td>Герасимов Олег</td>
+              </tr>
+              <tr>
+                <td>4 смена · 19.07–31.07</td>
+                <td>Ильин Матвей Сергеевич</td>
+                <td>+7 911 311-08-29</td>
+                <td>Ильина Дарья</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
 
-      .today-list {
-        display: grid;
-        gap: 10px;
-        font-size: 12px;
-        color: var(--muted);
-      }
-
-      .footer-note {
-        margin-top: 28px;
-        color: var(--muted);
-        font-size: 12px;
-        text-align: right;
-      }
-
-      @media (max-width: 980px) {
-        header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .panel.instagram,
-        .panel.bookings,
-        .panel.radio {
-          grid-column: span 12;
-        }
-
-        .panel.schedule {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 720px) {
-        .metrics {
-          grid-template-columns: 1fr;
-        }
-
-        .week {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-
-      .fade-in {
-        opacity: 0;
-        transform: translateY(12px);
-        animation: rise 0.9s ease forwards;
-      }
-
-      .fade-in.delay-1 {
-        animation-delay: 0.15s;
-      }
-
-      .fade-in.delay-2 {
-        animation-delay: 0.3s;
-      }
-
-      .fade-in.delay-3 {
-        animation-delay: 0.45s;
-      }
-
-      @keyframes rise {
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="noise"></div>
-    <div class="wrap">
-      <header>
+      <article class="panel radio fade-in delay-2">
         <div>
-          <h1 class="title">Летние смены · Центр управления</h1>
-          <p class="subtitle">Единая панель для аналитики Instagram и бронирований лагеря</p>
+          <h3>Радиоэфир</h3>
+          <p>Фоновая трансляция для рабочей атмосферы</p>
         </div>
-        <div class="header-actions">
-          <button class="cta" id="refreshAllBtn" type="button">Обновить все данные</button>
+        <div class="radio-shell">
+          <div class="RP-SCRIPT" data-style="dark">
+            <a class="RP-LINK" href="https://radiopotok.ru/">RadioPotok.ru</a>
+          </div>
         </div>
-      </header>
+        <div class="radio-date" aria-label="Сегодняшняя дата">
+          <div class="num" id="radioDay">—</div>
+          <div class="month" id="radioMonth">—</div>
+          <div class="weekday" id="radioWeekday">—</div>
+        </div>
+      </article>
 
-      <section class="grid">
-        <article class="panel instagram fade-in">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-            <div>
-              <h3>Instagram аналитика</h3>
-              <p>Сводка по публикациям за 7 дней</p>
-            </div>
-            <button class="cta" id="refreshInstagramBtn" type="button">Обновить</button>
-          </div>
+      <article class="panel schedule fade-in delay-3">
+        <div>
+          <h3>Расписание недели</h3>
+          <p>Фокус на активности, которые влияют на продажи и заполнение смен</p>
 
-          <div class="metrics">
-            <div class="metric">
-              <div class="label">Показы</div>
-              <div class="value">182 430</div>
-              <div class="delta">+18% к прошлой неделе</div>
-              <div class="spark">
-                <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 52C18 44 30 20 44 22C58 24 66 46 80 44C94 42 110 18 124 18C138 18 150 36 156 30" stroke="#5AD0FF" stroke-width="3" stroke-linecap="round" />
-                </svg>
-              </div>
+          <div class="week" id="weekGrid">
+            <div class="day" data-day="1">
+              <div class="name">Пн</div>
+              <div class="plan">Пост о программе смены</div>
+              <div class="chip">09:00 · Instagram</div>
             </div>
-            <div class="metric">
-              <div class="label">Охват</div>
-              <div class="value">96 210</div>
-              <div class="delta">+12% органика</div>
-              <div class="spark">
-                <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 42C18 34 28 30 44 34C60 38 66 50 80 48C94 46 106 22 124 22C142 22 152 40 156 36" stroke="#F2C94C" stroke-width="3" stroke-linecap="round" />
-                </svg>
-              </div>
+            <div class="day" data-day="2">
+              <div class="name">Вт</div>
+              <div class="plan">Обновить список мест</div>
+              <div class="chip">12:00 · Google Sheets</div>
             </div>
-            <div class="metric">
-              <div class="label">Вовлечённость</div>
-              <div class="value">8,6%</div>
-              <div class="delta">+0,9 п.п.</div>
-              <div class="spark">
-                <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 50C20 54 30 40 44 36C58 32 66 44 80 40C94 36 110 26 124 26C138 26 150 38 156 32" stroke="#FF7AA2" stroke-width="3" stroke-linecap="round" />
-                </svg>
-              </div>
+            <div class="day" data-day="3">
+              <div class="name">Ср</div>
+              <div class="plan">Сторис с отзывами</div>
+              <div class="chip">18:00 · Instagram</div>
             </div>
-            <div class="metric">
-              <div class="label">Сохранения</div>
-              <div class="value">12 940</div>
-              <div class="delta">+5% по топ-постам</div>
-              <div class="spark">
-                <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 48C18 40 28 24 44 24C60 24 66 42 80 40C94 38 110 26 124 26C138 26 150 34 156 28" stroke="#7CF2B5" stroke-width="3" stroke-linecap="round" />
-                </svg>
-              </div>
+            <div class="day" data-day="4">
+              <div class="name">Чт</div>
+              <div class="plan">Звонки родителям</div>
+              <div class="chip">16:00 · Отдел заботы</div>
+            </div>
+            <div class="day" data-day="5">
+              <div class="name">Пт</div>
+              <div class="plan">Промо-пост о скидке</div>
+              <div class="chip">10:00 · Instagram</div>
+            </div>
+            <div class="day" data-day="6">
+              <div class="name">Сб</div>
+              <div class="plan">Подготовить рассылку</div>
+              <div class="chip">14:00 · Email</div>
+            </div>
+            <div class="day" data-day="0">
+              <div class="name">Вс</div>
+              <div class="plan">Статус по бронированиям</div>
+              <div class="chip">19:00 · Команда</div>
             </div>
           </div>
-        </article>
+        </div>
 
-        <article class="panel bookings fade-in delay-1">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-            <div>
-              <h3>Бронирования смен</h3>
-              <p>Обновления из Google Sheets за сегодня</p>
-            </div>
-            <span class="chip">Синхронизация: каждые 30 мин</span>
+        <div class="today-card">
+          <h4>Сегодня</h4>
+          <div class="today-list">
+            <div>Главный фокус: обновить таблицу броней</div>
+            <div>Проверить отклик на последние публикации</div>
+            <div>Связаться с 3 новыми родителями</div>
           </div>
+          <button class="cta" type="button">Отметить задачи</button>
+        </div>
+      </article>
+    </section>
 
-          <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;">
-            <span class="chip">1 смена · 07.06–19.06</span>
-            <span class="chip">2 смена · 21.06–03.07</span>
-            <span class="chip">3 смена · 05.07–17.07</span>
-            <span class="chip">4 смена · 19.07–31.07</span>
-            <span class="chip">5 смена · 02.08–14.08</span>
-            <span class="chip">6 смена · 16.08–28.08</span>
-          </div>
+    <div class="footer-note">Данные обновлены: <span id="updatedAt">—</span></div>
+  </div>
 
-          <div class="table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Смена</th>
-                  <th>ФИО ребёнка</th>
-                  <th>Телефон</th>
-                  <th>Родитель</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1 смена · 07.06–19.06</td>
-                  <td>Соколова Анна Михайловна</td>
-                  <td>+7 999 123-45-67</td>
-                  <td>Соколова Ирина</td>
-                </tr>
-                <tr>
-                  <td>2 смена · 21.06–03.07</td>
-                  <td>Петров Кирилл Андреевич</td>
-                  <td>+7 921 555-22-11</td>
-                  <td>Петрова Марина</td>
-                </tr>
-                <tr>
-                  <td>3 смена · 05.07–17.07</td>
-                  <td>Герасимова Алиса Олеговна</td>
-                  <td>+7 901 447-90-10</td>
-                  <td>Герасимов Олег</td>
-                </tr>
-                <tr>
-                  <td>4 смена · 19.07–31.07</td>
-                  <td>Ильин Матвей Сергеевич</td>
-                  <td>+7 911 311-08-29</td>
-                  <td>Ильина Дарья</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </article>
+  <script defer
+    src="https://radiopotok.ru/f/script6/16e18ac98844452e0eba34f615bdeaad8ba8a53a7e59e232de17502a17cd57d3.js"
+    charset="UTF-8"></script>
+  <script>
+    // Конфигурация API — воркер Cloudflare (публичный GET /api/dashboard)
+    const apiBase = "https://dashboard-backend.mako-maryia.workers.dev";
+    const authHeader = "";
 
-        <article class="panel radio fade-in delay-2">
-          <div>
-            <h3>Радиоэфир</h3>
-            <p>Фоновая трансляция для рабочей атмосферы</p>
-          </div>
-          <div class="radio-shell">
-            <div class="RP-SCRIPT" data-style="dark">
-              <a class="RP-LINK" href="https://radiopotok.ru/">RadioPotok.ru</a>
-            </div>
-          </div>
-          <div class="radio-date" aria-label="Сегодняшняя дата">
-            <div class="num" id="radioDay">—</div>
-            <div class="month" id="radioMonth">—</div>
-            <div class="weekday" id="radioWeekday">—</div>
-          </div>
-        </article>
+    const locale = "ru-RU";
+    const radioDay = document.getElementById("radioDay");
+    const radioMonth = document.getElementById("radioMonth");
+    const radioWeekday = document.getElementById("radioWeekday");
+    const updatedAt = document.getElementById("updatedAt");
+    const weekGrid = document.getElementById("weekGrid");
 
-        <article class="panel schedule fade-in delay-3">
-          <div>
-            <h3>Расписание недели</h3>
-            <p>Фокус на активности, которые влияют на продажи и заполнение смен</p>
+    // Инициализация радио даты
+    const now = new Date();
+    const dayName = now.toLocaleDateString(locale, { weekday: "long" });
+    const dayNumber = now.toLocaleDateString(locale, { day: "numeric" });
+    const dayMonth = now.toLocaleDateString(locale, { day: "numeric", month: "long" });
+    const monthName = dayMonth.split(" ").slice(1).join(" ");
+    radioDay.textContent = dayNumber;
+    radioMonth.textContent = monthName;
+    radioWeekday.textContent = dayName;
+    updatedAt.textContent = now.toLocaleString(locale, { dateStyle: "short", timeStyle: "short" });
 
-            <div class="week" id="weekGrid">
-              <div class="day" data-day="1">
-                <div class="name">Пн</div>
-                <div class="plan">Пост о программе смены</div>
-                <div class="chip">09:00 · Instagram</div>
-              </div>
-              <div class="day" data-day="2">
-                <div class="name">Вт</div>
-                <div class="plan">Обновить список мест</div>
-                <div class="chip">12:00 · Google Sheets</div>
-              </div>
-              <div class="day" data-day="3">
-                <div class="name">Ср</div>
-                <div class="plan">Сторис с отзывами</div>
-                <div class="chip">18:00 · Instagram</div>
-              </div>
-              <div class="day" data-day="4">
-                <div class="name">Чт</div>
-                <div class="plan">Звонки родителям</div>
-                <div class="chip">16:00 · Отдел заботы</div>
-              </div>
-              <div class="day" data-day="5">
-                <div class="name">Пт</div>
-                <div class="plan">Промо-пост о скидке</div>
-                <div class="chip">10:00 · Instagram</div>
-              </div>
-              <div class="day" data-day="6">
-                <div class="name">Сб</div>
-                <div class="plan">Подготовить рассылку</div>
-                <div class="chip">14:00 · Email</div>
-              </div>
-              <div class="day" data-day="0">
-                <div class="name">Вс</div>
-                <div class="plan">Статус по бронированиям</div>
-                <div class="chip">19:00 · Команда</div>
-              </div>
-            </div>
-          </div>
+    // Подсветка сегодняшнего дня в календаре
+    const currentDay = now.getDay().toString();
+    const dayNodes = weekGrid.querySelectorAll(".day");
+    dayNodes.forEach((node) => {
+      if (node.dataset.day === currentDay) {
+        node.classList.add("today");
+      }
+    });
 
-          <div class="today-card">
-            <h4>Сегодня</h4>
-            <div class="today-list">
-              <div>Главный фокус: обновить таблицу броней</div>
-              <div>Проверить отклик на последние публикации</div>
-              <div>Связаться с 3 новыми родителями</div>
-            </div>
-            <button class="cta" type="button">Отметить задачи</button>
-          </div>
-        </article>
-      </section>
-
-      <div class="footer-note">Данные обновлены: <span id="updatedAt">—</span></div>
-    </div>
-
-    <script defer src="https://radiopotok.ru/f/script6/16e18ac98844452e0eba34f615bdeaad8ba8a53a7e59e232de17502a17cd57d3.js" charset="UTF-8"></script>
-    <script>
-      // Конфигурация API — воркер Cloudflare (публичный GET /api/dashboard)
-      const apiBase = "https://dashboard-backend.mako-maryia.workers.dev";
-      const authHeader = "";
-
-      const locale = "ru-RU";
-      const radioDay = document.getElementById("radioDay");
-      const radioMonth = document.getElementById("radioMonth");
-      const radioWeekday = document.getElementById("radioWeekday");
-      const updatedAt = document.getElementById("updatedAt");
-      const weekGrid = document.getElementById("weekGrid");
-
-      // Инициализация радио даты
-      const now = new Date();
-      const dayName = now.toLocaleDateString(locale, { weekday: "long" });
-      const dayNumber = now.toLocaleDateString(locale, { day: "numeric" });
-      const dayMonth = now.toLocaleDateString(locale, { day: "numeric", month: "long" });
-      const monthName = dayMonth.split(" ").slice(1).join(" ");
-      radioDay.textContent = dayNumber;
-      radioMonth.textContent = monthName;
-      radioWeekday.textContent = dayName;
-      updatedAt.textContent = now.toLocaleString(locale, { dateStyle: "short", timeStyle: "short" });
-
-      // Подсветка сегодняшнего дня в календаре
-      const currentDay = now.getDay().toString();
-      const dayNodes = weekGrid.querySelectorAll(".day");
-      dayNodes.forEach((node) => {
-        if (node.dataset.day === currentDay) {
-          node.classList.add("today");
-        }
+    // API функции
+    async function callApi(path, options = {}) {
+      const res = await fetch(`${apiBase}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authHeader ? { Authorization: authHeader } : {}),
+          ...options.headers,
+        },
+        ...options,
       });
+      if (!res.ok) {
+        throw new Error(`API ${path} → ${res.status}`);
+      }
+      return res.json();
+    }
 
-      // API функции
-      async function callApi(path, options = {}) {
-        const res = await fetch(`${apiBase}${path}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(authHeader ? { Authorization: authHeader } : {}),
-            ...options.headers,
-          },
-          ...options,
+    async function getDashboard() {
+      const res = await fetch(`${apiBase}/api/dashboard`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(authHeader ? { Authorization: authHeader } : {}),
+        },
+      });
+      if (!res.ok) {
+        throw new Error(`GET /api/dashboard → ${res.status}`);
+      }
+      return res.json();
+    }
+
+    // Рендеринг метрик Instagram
+    function renderInstagramMetrics(data) {
+      const { instagram } = data;
+      const metrics = document.querySelectorAll(".panel.instagram .metric");
+      const spark = document.querySelectorAll(".panel.instagram .spark svg path");
+
+      // Показы (reach)
+      const lastUser = instagram.userMetrics?.[instagram.userMetrics.length - 1];
+      if (!lastUser) {
+        metrics.forEach(m => {
+          m.querySelector(".value").textContent = "—";
+          m.querySelector(".delta").textContent = "Нет данных";
         });
-        if (!res.ok) {
-          throw new Error(`API ${path} → ${res.status}`);
-        }
-        return res.json();
+        return;
       }
 
-      async function getDashboard() {
-        const res = await fetch(`${apiBase}/api/dashboard`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(authHeader ? { Authorization: authHeader } : {}),
-          },
-        });
-        if (!res.ok) {
-          throw new Error(`GET /api/dashboard → ${res.status}`);
-        }
-        return res.json();
+      const reach = lastUser?.reach ?? null;
+      const reachEl = metrics[0].querySelector(".value");
+      const reachDelta = metrics[0].querySelector(".delta");
+      reachEl.textContent = reach != null ? formatNumber(reach) : "—";
+      reachDelta.textContent = reach != null ? "охват за день" : "Нет данных";
+
+      // Охват (total_interactions)
+      const totalInteractions = lastUser?.total_interactions ?? null;
+      const interactionsEl = metrics[1].querySelector(".value");
+      const interactionsDelta = metrics[1].querySelector(".delta");
+      interactionsEl.textContent = totalInteractions != null ? formatNumber(totalInteractions) : "—";
+      interactionsDelta.textContent = totalInteractions != null ? "взаимодействия" : "Нет данных";
+
+      // Вовлечённость (engagement)
+      const saves = lastUser?.saves ?? null;
+      const followers = lastUser?.followers_total ?? instagram.followers_total ?? null;
+      const engagement = (totalInteractions && followers) ? ((totalInteractions / followers) * 100).toFixed(1) : null;
+      const engagementEl = metrics[2].querySelector(".value");
+      const engagementDelta = metrics[2].querySelector(".delta");
+      engagementEl.textContent = engagement != null ? `${engagement}%` : "—";
+      engagementDelta.textContent = followers != null ? `подписчиков: ${formatNumber(followers)}` : "Нет данных";
+
+      // Сохранения (saves)
+      const savesEl = metrics[3].querySelector(".value");
+      const savesDelta = metrics[3].querySelector(".delta");
+      savesEl.textContent = saves != null ? formatNumber(saves) : "—";
+      savesDelta.textContent = saves != null ? "сохранения" : "Нет данных";
+
+      // Обновление спарков (простые заглушки)
+      spark.forEach((s, i) => {
+        const d = s.getAttribute("d");
+        if (i === 0) s.setAttribute("d", d.replace(/52/, reach > 100000 ? "52" : "32"));
+        if (i === 1) s.setAttribute("d", d.replace(/42/, totalInteractions > 50000 ? "42" : "22"));
+        if (i === 2) s.setAttribute("d", d.replace(/50/, engagement > 5 ? "50" : "30"));
+        if (i === 3) s.setAttribute("d", d.replace(/48/, saves > 5000 ? "48" : "28"));
+      });
+    }
+
+    // Рендеринг таблицы бронирований
+    function renderBookingsTable(bookings) {
+      const tbody = document.querySelector(".panel.bookings tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!bookings || bookings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted)">Нет данных</td></tr>`;
+        return;
       }
-
-      // Рендеринг метрик Instagram
-      function renderInstagramMetrics(data) {
-        const { instagram } = data;
-        const metrics = document.querySelectorAll(".panel.instagram .metric");
-        const spark = document.querySelectorAll(".panel.instagram .spark svg path");
-
-        // Показы
-        const lastUser = instagram.userMetrics?.[instagram.userMetrics.length - 1];
-        const reach = lastUser?.reach ?? 0;
-        const reachEl = metrics[0].querySelector(".value");
-        const reachDelta = metrics[0].querySelector(".delta");
-        reachEl.textContent = formatNumber(reach);
-        reachDelta.textContent = "+18% к прошлой неделе";
-
-        // Охват
-        const totalInteractions = lastUser?.total_interactions ?? 0;
-        const interactionsEl = metrics[1].querySelector(".value");
-        const interactionsDelta = metrics[1].querySelector(".delta");
-        interactionsEl.textContent = formatNumber(totalInteractions);
-        interactionsDelta.textContent = "+12% органика";
-
-        // Вовлечённость
-        const saves = lastUser?.saves ?? 0;
-        const engagement = lastUser?.total_interactions ? ((lastUser.total_interactions / (lastUser.followers_total || 1)) * 100).toFixed(1) : "0";
-        const engagementEl = metrics[2].querySelector(".value");
-        const engagementDelta = metrics[2].querySelector(".delta");
-        engagementEl.textContent = `${engagement}%`;
-        engagementDelta.textContent = "+0,9 п.п.";
-
-        // Сохранения
-        const savesEl = metrics[3].querySelector(".value");
-        const savesDelta = metrics[3].querySelector(".delta");
-        savesEl.textContent = formatNumber(saves);
-        savesDelta.textContent = "+5% по топ-постам";
-
-        // Обновление спарков (простые заглушки)
-        spark.forEach((s, i) => {
-          const d = s.getAttribute("d");
-          if (i === 0) s.setAttribute("d", d.replace(/52/, reach > 100000 ? "52" : "32"));
-          if (i === 1) s.setAttribute("d", d.replace(/42/, totalInteractions > 50000 ? "42" : "22"));
-          if (i === 2) s.setAttribute("d", d.replace(/50/, engagement > 5 ? "50" : "30"));
-          if (i === 3) s.setAttribute("d", d.replace(/48/, saves > 5000 ? "48" : "28"));
-        });
-      }
-
-      // Рендеринг таблицы бронирований
-      function renderBookingsTable(bookings) {
-        const tbody = document.querySelector(".panel.bookings tbody");
-        if (!tbody) return;
-        tbody.innerHTML = "";
-        if (!bookings || bookings.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted)">Нет данных</td></tr>`;
-          return;
-        }
-        bookings.slice(0, 20).forEach((row) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
+      bookings.slice(0, 20).forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
             <td>${escapeHtml(row.sheet_name || "—")}</td>
             <td>${escapeHtml(row.fio || "—")}</td>
             <td>${escapeHtml(row.phone || "—")}</td>
             <td>${escapeHtml(row.parent_name || "—")}</td>
           `;
-          tbody.appendChild(tr);
-        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Рендеринг событий календаря
+    function renderCalendarEvents(events) {
+      // 1. Обновляем недельный грид — полностью очищаем и заполняем заново
+      const dayNodes = weekGrid.querySelectorAll(".day");
+      dayNodes.forEach((node) => {
+        // Сохраняем только день недели (.name)
+        const nameEl = node.querySelector(".name");
+        const dow = node.dataset.day;
+        // Очищаем всё содержимое
+        node.innerHTML = "";
+        // Возвращаем название дня
+        if (nameEl) {
+          node.appendChild(nameEl);
+        } else {
+          const newName = document.createElement("div");
+          newName.className = "name";
+          newName.textContent = dow === "0" ? "Вс" :
+            dow === "1" ? "Пн" :
+              dow === "2" ? "Вт" :
+                dow === "3" ? "Ср" :
+                  dow === "4" ? "Чт" :
+                    dow === "5" ? "Пт" : "Сб";
+          node.appendChild(newName);
+        }
+        // Восстанавливаем подсветку сегодня
+        if (node.dataset.day === currentDay) {
+          node.classList.add("today");
+        }
+      });
+
+      // 2. Обновляем блок «Сегодня»
+      const todayCard = document.querySelector(".panel.schedule .today-card");
+      const todayList = todayCard?.querySelector(".today-list");
+      if (todayList) {
+        todayList.innerHTML = "";
       }
 
-      // Рендеринг событий календаря
-      function renderCalendarEvents(events) {
-        // 1. Обновляем недельный грид — очищаем старые события из API и вставляем новые
-        const dayNodes = weekGrid.querySelectorAll(".day");
-        dayNodes.forEach((node) => {
-          // Удаляем только элементы с классом .event (добавленные из API), оставляем .name
-          node.querySelectorAll(".event").forEach((el) => el.remove());
-        });
-
-        // 2. Обновляем блок «Сегодня»
-        const todayCard = document.querySelector(".panel.schedule .today-card");
-        const todayList = todayCard?.querySelector(".today-list");
+      if (!events || events.length === 0) {
         if (todayList) {
-          todayList.innerHTML = "";
+          todayList.innerHTML = `<div style="color:var(--muted)">Нет событий на неделю</div>`;
         }
+        return;
+      }
 
-        if (!events || events.length === 0) {
-          if (todayList) {
-            todayList.innerHTML = `<div style="color:var(--muted)">Нет событий на неделю</div>`;
+      const todayDow = new Date().getDay(); // 0=Вс, 1=Пн, ...
+
+      events.forEach((ev) => {
+        const startDate = ev.start_time ? new Date(ev.start_time) : null;
+        const timeStr = startDate
+          ? startDate.toLocaleString(locale, { hour: "2-digit", minute: "2-digit" })
+          : "—";
+        const summary = escapeHtml(ev.summary || "—");
+
+        // Вставляем событие в нужную ячейку недельного грида
+        if (startDate) {
+          const dow = startDate.getDay().toString();
+          const targetDay = weekGrid.querySelector(`.day[data-day="${dow}"]`);
+          if (targetDay) {
+            const evEl = document.createElement("div");
+            evEl.className = "event chip";
+            evEl.style.cssText = "font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;";
+            evEl.title = `${timeStr} · ${ev.summary || ""}`;
+            evEl.textContent = `${timeStr} · ${ev.summary || "—"}`;
+            targetDay.appendChild(evEl);
           }
-          return;
         }
 
-        const todayDow = new Date().getDay(); // 0=Вс, 1=Пн, ...
-
-        events.forEach((ev) => {
-          const startDate = ev.start_time ? new Date(ev.start_time) : null;
-          const timeStr = startDate
-            ? startDate.toLocaleString(locale, { hour: "2-digit", minute: "2-digit" })
-            : "—";
-          const summary = escapeHtml(ev.summary || "—");
-
-          // Вставляем событие в нужную ячейку недельного грида
-          if (startDate) {
-            const dow = startDate.getDay().toString();
-            const targetDay = weekGrid.querySelector(`.day[data-day="${dow}"]`);
-            if (targetDay) {
-              const evEl = document.createElement("div");
-              evEl.className = "event chip";
-              evEl.style.cssText = "font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;";
-              evEl.title = `${timeStr} · ${ev.summary || ""}`;
-              evEl.textContent = `${timeStr} · ${ev.summary || "—"}`;
-              targetDay.appendChild(evEl);
-            }
-          }
-
-          // Добавляем в список «Сегодня» только события текущего дня
-          if (todayList && startDate && startDate.getDay() === todayDow) {
-            const div = document.createElement("div");
-            div.textContent = `${timeStr} · ${ev.summary || "—"}`;
-            todayList.appendChild(div);
-          }
-        });
-
-        // Если сегодня нет событий — показываем заглушку
-        if (todayList && todayList.children.length === 0) {
-          todayList.innerHTML = `<div style="color:var(--muted)">Нет событий на сегодня</div>`;
-        }
-      }
-
-      // Вспомогательные функции
-      function formatNumber(n) {
-        if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
-        if (n >= 1000) return (n / 1000).toFixed(1) + "K";
-        return String(n);
-      }
-      function escapeHtml(str) {
-        return String(str || "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-      }
-
-      // Загрузка данных при старте
-      async function loadDashboard() {
-        try {
-          const data = await getDashboard();
-          renderInstagramMetrics(data);
-          renderBookingsTable(data.bookings);
-          renderCalendarEvents(data.calendar);
-          updatedAt.textContent = new Date().toLocaleString(locale, { dateStyle: "short", timeStyle: "short" });
-        } catch (err) {
-          console.error("Ошибка загрузки данных:", err);
-          updatedAt.textContent = "Ошибка загрузки";
-        }
-      }
-
-      // Обработчики кнопок
-      const refreshAllBtn = document.getElementById("refreshAllBtn");
-      refreshAllBtn?.addEventListener("click", async () => {
-        refreshAllBtn.disabled = true;
-        try {
-          await callApi("/api/refresh-all");
-          await loadDashboard();
-        } catch (err) {
-          console.error(err);
-        } finally {
-          refreshAllBtn.disabled = false;
+        // Добавляем в список «Сегодня» только события текущего дня
+        if (todayList && startDate && startDate.getDay() === todayDow) {
+          const div = document.createElement("div");
+          div.textContent = `${timeStr} · ${ev.summary || "—"}`;
+          todayList.appendChild(div);
         }
       });
 
-      const refreshInstagramBtn = document.getElementById("refreshInstagramBtn");
-      refreshInstagramBtn?.addEventListener("click", async () => {
-        refreshInstagramBtn.disabled = true;
-        try {
-          await callApi("/api/instagram/refresh");
-          await loadDashboard();
-        } catch (err) {
-          console.error(err);
-        } finally {
-          refreshInstagramBtn.disabled = false;
-        }
-      });
+      // Если сегодня нет событий — показываем заглушку
+      if (todayList && todayList.children.length === 0) {
+        todayList.innerHTML = `<div style="color:var(--muted)">Нет событий на сегодня</div>`;
+      }
+    }
 
-      // Загрузка при старте
-      loadDashboard();
-    </script>
-  </body>
+    // Вспомогательные функции
+    function formatNumber(n) {
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+      if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+      return String(n);
+    }
+    function escapeHtml(str) {
+      return String(str || "").replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+    }
+
+    // Загрузка данных при старте
+    async function loadDashboard() {
+      try {
+        const data = await getDashboard();
+        renderInstagramMetrics(data);
+        renderBookingsTable(data.bookings);
+        renderCalendarEvents(data.calendar);
+        updatedAt.textContent = new Date().toLocaleString(locale, { dateStyle: "short", timeStyle: "short" });
+      } catch (err) {
+        console.error("Ошибка загрузки данных:", err);
+        updatedAt.textContent = "Ошибка загрузки";
+      }
+    }
+
+    // Обработчики кнопок
+    const refreshAllBtn = document.getElementById("refreshAllBtn");
+    refreshAllBtn?.addEventListener("click", async () => {
+      refreshAllBtn.disabled = true;
+      try {
+        await callApi("/api/refresh-all");
+        await loadDashboard();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        refreshAllBtn.disabled = false;
+      }
+    });
+
+    const refreshInstagramBtn = document.getElementById("refreshInstagramBtn");
+    refreshInstagramBtn?.addEventListener("click", async () => {
+      refreshInstagramBtn.disabled = true;
+      try {
+        await callApi("/api/instagram/refresh");
+        await loadDashboard();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        refreshInstagramBtn.disabled = false;
+      }
+    });
+
+    // Загрузка при старте
+    loadDashboard();
+  </script>
+</body>
+
 </html>
