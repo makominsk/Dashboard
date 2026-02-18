@@ -68,3 +68,14 @@
   - В таблицу instagram_post_metrics успешно вставлено 25 строк
   - Проверены Composio connected accounts: Instagram (ca_TGVA67AbNO78, ACTIVE), Calendar (ca_2UnTItt_Dsp-), Google Sheets (ca_OOCCclWP2CiQ), entity_id = "ma-ko"
   - Коммит: 06092e0 с сообщением "3"
+
+- 2026-02-18: **Все три синхронизации работают!** ✅ Исправлена функция `syncSheets`:
+  - Заменён инструмент: `GOOGLESHEETS_VALUES_GET` → `GOOGLESHEETS_BATCH_GET` (новый формат Composio v3)
+  - Обновлена обработка ответа: `valueRanges[0].values` вместо `values`
+  - Все уже-деновые параметры: `ranges` как массив вместо `range`
+  - Статус синхронизаций:
+    - ✅ Instagram: HTTP 200, 25 постов в D1
+    - ✅ Sheets: HTTP 200, 0 вставлено (нет данных в листах)
+    - ✅ Calendar: HTTP 200, 0 событий (нет событий в диапазоне)
+  - Все три эндпоинта (`/api/instagram/refresh`, `/api/bookings/refresh`, `/api/calendar/refresh`) работают без ошибок
+  - Коммит: 1afab6b "Fix: Change GOOGLESHEETS_VALUES_GET to GOOGLESHEETS_BATCH_GET - all syncs now working"
