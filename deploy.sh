@@ -1,18 +1,19 @@
 #!/bin/bash
+# Скрипт деплоя Dashboard на Cloudflare Workers
+# Запустите: bash deploy.sh
+
 set -e
+cd "$(dirname "$0")"
 
-echo "=== Dashboard Deploy ==="
-echo ""
+export WRANGLER_HOME="/Users/macbookpro_ma-ko/Library/Preferences/.wrangler"
 
-echo "1. Применяем миграцию БД..."
+echo "=== 1. Применяем миграцию D1 ==="
 npx wrangler d1 migrations apply dashboard --remote
-echo "✓ Миграция применена"
-echo ""
 
-echo "2. Деплоим воркер..."
+echo ""
+echo "=== 2. Деплоим воркер ==="
 npx wrangler deploy
-echo "✓ Воркер задеплоен"
-echo ""
 
+echo ""
 echo "=== Готово! ==="
-echo "URL: https://dashboard-backend.mako-maryia.workers.dev"
+echo "Воркер: https://dashboard-backend.mako-maryia.workers.dev"
