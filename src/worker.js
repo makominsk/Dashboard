@@ -1,3 +1,239 @@
+const HTML_PAGE = `<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Панель мониторинга — Летние смены</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Rubik:wght@300;400;500;700&display=swap");
+      :root{--bg:#0b0d14;--bg-2:#141826;--panel:#121522;--panel-2:#0f1420;--ink:#e9edf8;--muted:#aab2c8;--accent:#f2c94c;--accent-2:#5ad0ff;--accent-3:#ff7aa2;--success:#7cf2b5;--border:rgba(255,255,255,0.08);--shadow:0 20px 60px rgba(5,8,20,0.6);--glow:0 0 60px rgba(90,208,255,0.18)}
+      *{box-sizing:border-box}html,body{height:100%}
+      body{margin:0;font-family:"Rubik",system-ui,sans-serif;color:var(--ink);background:radial-gradient(1200px 800px at 10% -20%,#1a2741 0%,transparent 70%),radial-gradient(1000px 600px at 90% 0%,#2d1d3e 0%,transparent 70%),radial-gradient(900px 700px at 70% 100%,#133337 0%,transparent 70%),var(--bg);min-height:100vh}
+      .noise{position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");pointer-events:none;mix-blend-mode:soft-light;z-index:0}
+      .wrap{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:36px 28px 60px}
+      header{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:32px;flex-wrap:wrap}
+      .header-actions{display:flex;gap:12px;flex-wrap:wrap}
+      .title{font-family:"Fraunces",serif;font-size:clamp(28px,3vw,42px);letter-spacing:.5px;margin:0 0 6px}
+      .subtitle{color:var(--muted);font-size:14px;margin:0}
+      .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:22px}
+      .panel{background:linear-gradient(160deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid var(--border);border-radius:24px;padding:22px 24px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+      .panel::after{content:"";position:absolute;inset:0;background:radial-gradient(400px 200px at 0% 0%,rgba(90,208,255,.08),transparent 60%);pointer-events:none}
+      .panel h3{margin:0 0 8px;font-size:18px;letter-spacing:.3px}.panel p{margin:0;color:var(--muted);font-size:13px}
+      .panel.instagram{grid-column:span 4;background:linear-gradient(160deg,rgba(255,122,162,.12),rgba(18,21,34,.9))}
+      .panel.bookings{grid-column:span 5;background:linear-gradient(160deg,rgba(124,242,181,.08),rgba(18,21,34,.9))}
+      .panel.radio{grid-column:span 3;background:linear-gradient(160deg,rgba(242,201,76,.14),rgba(18,21,34,.9))}
+      .panel.schedule{grid-column:span 12;display:grid;grid-template-columns:2.2fr 1fr;gap:20px;background:linear-gradient(160deg,rgba(90,208,255,.08),rgba(18,21,34,.9))}
+      .metrics{margin-top:18px;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+      .metric{padding:16px;border-radius:16px;border:1px solid var(--border);background:rgba(12,16,28,.75)}
+      .metric .label{color:var(--muted);font-size:12px;letter-spacing:.2px}
+      .metric .value{font-size:22px;font-weight:600;margin:6px 0}
+      .metric .delta{font-size:12px;color:var(--success)}
+      .spark{height:64px;margin-top:8px}.spark svg{width:100%;height:100%}
+      .table{margin-top:18px;border-radius:16px;overflow:hidden;border:1px solid var(--border)}
+      table{width:100%;border-collapse:collapse;font-size:13px}
+      thead{background:rgba(15,20,32,.9);color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-size:11px}
+      th,td{padding:12px 14px;border-bottom:1px solid var(--border);text-align:left}
+      tbody tr:hover{background:rgba(255,255,255,.04)}
+      .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(0,0,0,.2);font-size:11px;color:var(--muted)}
+      .cta{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:1px solid rgba(242,201,76,.5);background:rgba(242,201,76,.12);color:var(--accent);font-size:12px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}
+      .cta:hover{transform:translateY(-1px);box-shadow:0 10px 25px rgba(242,201,76,.25)}
+      .radio-shell{margin-top:16px;border-radius:16px;border:1px solid var(--border);padding:12px;background:rgba(12,16,28,.75);min-height:160px;display:flex;align-items:center;justify-content:center}
+      .RP-SCRIPT{width:100%;display:flex;align-items:center;justify-content:center;min-height:120px;border-radius:14px;border:1px dashed rgba(255,255,255,.12);background:linear-gradient(120deg,rgba(242,201,76,.1),rgba(90,208,255,.06))}
+      .RP-LINK{text-decoration:none;display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;font-size:13px;color:var(--ink);background:rgba(15,20,32,.9);border:1px solid rgba(242,201,76,.4);box-shadow:0 12px 28px rgba(242,201,76,.2);transition:transform .2s ease,box-shadow .2s ease}
+      .RP-LINK::before{content:"▶";font-size:12px;color:var(--accent)}.RP-LINK:hover{transform:translateY(-1px);box-shadow:0 16px 34px rgba(242,201,76,.28)}
+      .radio-date{margin-top:22px;display:grid;gap:6px;text-align:center}
+      .radio-date .num{font-family:"Rubik",system-ui,sans-serif;font-size:88px;letter-spacing:1px}
+      .radio-date .month{text-transform:uppercase;letter-spacing:2px;font-size:16px;color:var(--muted)}
+      .radio-date .weekday{font-size:18px;color:var(--ink)}
+      .week{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:16px}
+      .day{border-radius:16px;border:1px solid var(--border);padding:12px;min-height:112px;background:rgba(12,16,28,.7);display:flex;flex-direction:column;gap:8px}
+      .day .name{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+      .day .plan{font-size:12px}
+      .day.today{border-color:rgba(90,208,255,.6);background:rgba(90,208,255,.12);box-shadow:var(--glow)}
+      .today-card{border-radius:20px;border:1px solid var(--border);padding:18px;background:rgba(12,16,28,.8);display:flex;flex-direction:column;gap:12px}
+      .today-card h4{margin:0;font-size:16px}
+      .today-list{display:grid;gap:10px;font-size:12px;color:var(--muted)}
+      .footer-note{margin-top:28px;color:var(--muted);font-size:12px;text-align:right}
+      @media(max-width:980px){header{flex-direction:column;align-items:flex-start}.panel.instagram,.panel.bookings,.panel.radio{grid-column:span 12}.panel.schedule{grid-template-columns:1fr}}
+      @media(max-width:720px){.metrics{grid-template-columns:1fr}.week{grid-template-columns:repeat(2,1fr)}}
+      .fade-in{opacity:0;transform:translateY(12px);animation:rise .9s ease forwards}
+      .fade-in.delay-1{animation-delay:.15s}.fade-in.delay-2{animation-delay:.3s}.fade-in.delay-3{animation-delay:.45s}
+      @keyframes rise{to{opacity:1;transform:translateY(0)}}
+    </style>
+  </head>
+  <body>
+    <div class="noise"></div>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1 class="title">Летние смены · Центр управления</h1>
+          <p class="subtitle">Единая панель для аналитики Instagram и бронирований лагеря</p>
+        </div>
+        <div class="header-actions">
+          <button class="cta" id="refreshAllBtn" type="button">Обновить все данные</button>
+        </div>
+      </header>
+      <section class="grid">
+        <article class="panel instagram fade-in">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <div><h3>Instagram аналитика</h3><p>Сводка по публикациям за 7 дней</p></div>
+            <button class="cta" id="refreshInstagramBtn" type="button">Обновить</button>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="label">Показы</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 52C18 44 30 20 44 22C58 24 66 46 80 44C94 42 110 18 124 18C138 18 150 36 156 30" stroke="#5AD0FF" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+            <div class="metric"><div class="label">Охват</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 42C18 34 28 30 44 34C60 38 66 50 80 48C94 46 106 22 124 22C142 22 152 40 156 36" stroke="#F2C94C" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+            <div class="metric"><div class="label">Вовлечённость</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 50C20 54 30 40 44 36C58 32 66 44 80 40C94 36 110 26 124 26C138 26 150 38 156 32" stroke="#FF7AA2" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+            <div class="metric"><div class="label">Сохранения</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 48C18 40 28 24 44 24C60 24 66 42 80 40C94 38 110 26 124 26C138 26 150 34 156 28" stroke="#7CF2B5" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+          </div>
+        </article>
+        <article class="panel bookings fade-in delay-1">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <div><h3>Бронирования смен</h3><p>Обновления из Google Sheets за сегодня</p></div>
+            <span class="chip">Синхронизация: каждые 30 мин</span>
+          </div>
+          <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px">
+            <span class="chip">1 смена · 07.06–19.06</span><span class="chip">2 смена · 21.06–03.07</span>
+            <span class="chip">3 смена · 05.07–17.07</span><span class="chip">4 смена · 19.07–31.07</span>
+            <span class="chip">5 смена · 02.08–14.08</span><span class="chip">6 смена · 16.08–28.08</span>
+          </div>
+          <div class="table"><table>
+            <thead><tr><th>Смена</th><th>ФИО ребёнка</th><th>Телефон</th><th>Родитель</th></tr></thead>
+            <tbody><tr><td colspan="4" style="text-align:center;color:var(--muted)">Загрузка...</td></tr></tbody>
+          </table></div>
+        </article>
+        <article class="panel radio fade-in delay-2">
+          <div><h3>Радиоэфир</h3><p>Фоновая трансляция для рабочей атмосферы</p></div>
+          <div class="radio-shell"><div class="RP-SCRIPT" data-style="dark"><a class="RP-LINK" href="https://radiopotok.ru/">RadioPotok.ru</a></div></div>
+          <div class="radio-date" aria-label="Сегодняшняя дата">
+            <div class="num" id="radioDay">—</div>
+            <div class="month" id="radioMonth">—</div>
+            <div class="weekday" id="radioWeekday">—</div>
+          </div>
+        </article>
+        <article class="panel schedule fade-in delay-3">
+          <div>
+            <h3>Расписание недели</h3>
+            <p>Фокус на активности, которые влияют на продажи и заполнение смен</p>
+            <div class="week" id="weekGrid">
+              <div class="day" data-day="1"><div class="name">Пн</div><div class="plan">Пост о программе смены</div><div class="chip">09:00 · Instagram</div></div>
+              <div class="day" data-day="2"><div class="name">Вт</div><div class="plan">Обновить список мест</div><div class="chip">12:00 · Google Sheets</div></div>
+              <div class="day" data-day="3"><div class="name">Ср</div><div class="plan">Сторис с отзывами</div><div class="chip">18:00 · Instagram</div></div>
+              <div class="day" data-day="4"><div class="name">Чт</div><div class="plan">Звонки родителям</div><div class="chip">16:00 · Отдел заботы</div></div>
+              <div class="day" data-day="5"><div class="name">Пт</div><div class="plan">Промо-пост о скидке</div><div class="chip">10:00 · Instagram</div></div>
+              <div class="day" data-day="6"><div class="name">Сб</div><div class="plan">Подготовить рассылку</div><div class="chip">14:00 · Email</div></div>
+              <div class="day" data-day="0"><div class="name">Вс</div><div class="plan">Статус по бронированиям</div><div class="chip">19:00 · Команда</div></div>
+            </div>
+          </div>
+          <div class="today-card">
+            <h4>Сегодня</h4>
+            <div class="today-list"><div>Загрузка событий...</div></div>
+            <button class="cta" type="button">Отметить задачи</button>
+          </div>
+        </article>
+      </section>
+      <div class="footer-note">Данные обновлены: <span id="updatedAt">—</span></div>
+    </div>
+    <script defer src="https://radiopotok.ru/f/script6/16e18ac98844452e0eba34f615bdeaad8ba8a53a7e59e232de17502a17cd57d3.js" charset="UTF-8"></script>
+    <script>
+      const apiBase = "";
+      const authHeader = window.DASHBOARD_AUTH || "";
+      const locale = "ru-RU";
+      const radioDay = document.getElementById("radioDay");
+      const radioMonth = document.getElementById("radioMonth");
+      const radioWeekday = document.getElementById("radioWeekday");
+      const updatedAt = document.getElementById("updatedAt");
+      const weekGrid = document.getElementById("weekGrid");
+
+      const now = new Date();
+      radioDay.textContent = now.toLocaleDateString(locale,{day:"numeric"});
+      radioMonth.textContent = now.toLocaleDateString(locale,{month:"long"});
+      radioWeekday.textContent = now.toLocaleDateString(locale,{weekday:"long"});
+      updatedAt.textContent = now.toLocaleString(locale,{dateStyle:"short",timeStyle:"short"});
+
+      const currentDay = now.getDay().toString();
+      weekGrid.querySelectorAll(".day").forEach(n=>{if(n.dataset.day===currentDay)n.classList.add("today")});
+
+      async function callApi(path,options={}){
+        const res=await fetch(apiBase+path,{method:"POST",headers:{"Content-Type":"application/json",...(authHeader?{Authorization:authHeader}:{}),...(options.headers||{})}, ...options});
+        if(!res.ok)throw new Error("API "+path+" → "+res.status);
+        return res.json();
+      }
+      async function getDashboard(){
+        const res=await fetch(apiBase+"/api/dashboard",{headers:{"Content-Type":"application/json",...(authHeader?{Authorization:authHeader}:{})}});
+        if(!res.ok)throw new Error("GET /api/dashboard → "+res.status);
+        return res.json();
+      }
+      function formatNumber(n){if(n>=1e6)return(n/1e6).toFixed(1)+"M";if(n>=1000)return(n/1000).toFixed(1)+"K";return String(n)}
+      function escapeHtml(str){return String(str||"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]))}
+
+      function renderInstagramMetrics(data){
+        const ig=data.instagram;
+        const metrics=document.querySelectorAll(".panel.instagram .metric");
+        const last=ig.userMetrics?.[ig.userMetrics.length-1];
+        const reach=last?.reach??0;
+        const interactions=last?.total_interactions??0;
+        const saves=last?.saves??0;
+        const engagement=interactions?((interactions/(last?.followers_total||1))*100).toFixed(1):"0";
+        metrics[0].querySelector(".value").textContent=formatNumber(reach);
+        metrics[0].querySelector(".delta").textContent="+18% к прошлой неделе";
+        metrics[1].querySelector(".value").textContent=formatNumber(interactions);
+        metrics[1].querySelector(".delta").textContent="+12% органика";
+        metrics[2].querySelector(".value").textContent=engagement+"%";
+        metrics[2].querySelector(".delta").textContent="+0,9 п.п.";
+        metrics[3].querySelector(".value").textContent=formatNumber(saves);
+        metrics[3].querySelector(".delta").textContent="+5% по топ-постам";
+      }
+      function renderBookingsTable(bookings){
+        const tbody=document.querySelector(".panel.bookings tbody");
+        if(!tbody)return;
+        tbody.innerHTML="";
+        if(!bookings||!bookings.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted)">Нет данных</td></tr>';return}
+        bookings.slice(0,20).forEach(row=>{
+          const tr=document.createElement("tr");
+          tr.innerHTML='<td>'+escapeHtml(row.sheet_name||"—")+'</td><td>'+escapeHtml(row.fio||"—")+'</td><td>'+escapeHtml(row.phone||"—")+'</td><td>'+escapeHtml(row.parent_name||"—")+'</td>';
+          tbody.appendChild(tr);
+        });
+      }
+      function renderCalendarEvents(events){
+        weekGrid.querySelectorAll(".event").forEach(el=>el.remove());
+        const todayList=document.querySelector(".panel.schedule .today-card .today-list");
+        if(todayList)todayList.innerHTML="";
+        if(!events||!events.length){if(todayList)todayList.innerHTML='<div style="color:var(--muted)">Нет событий на неделю</div>';return}
+        const todayDow=new Date().getDay();
+        events.forEach(ev=>{
+          const startDate=ev.start_time?new Date(ev.start_time):null;
+          const timeStr=startDate?startDate.toLocaleString(locale,{hour:"2-digit",minute:"2-digit"}):"—";
+          if(startDate){
+            const dow=startDate.getDay().toString();
+            const targetDay=weekGrid.querySelector('.day[data-day="'+dow+'"]');
+            if(targetDay){const el=document.createElement("div");el.className="event chip";el.style.cssText="font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%";el.title=timeStr+" · "+(ev.summary||"");el.textContent=timeStr+" · "+(ev.summary||"—");targetDay.appendChild(el)}
+          }
+          if(todayList&&startDate&&startDate.getDay()===todayDow){const d=document.createElement("div");d.textContent=timeStr+" · "+(ev.summary||"—");todayList.appendChild(d)}
+        });
+        if(todayList&&!todayList.children.length)todayList.innerHTML='<div style="color:var(--muted)">Нет событий на сегодня</div>';
+      }
+      async function loadDashboard(){
+        try{
+          const data=await getDashboard();
+          renderInstagramMetrics(data);
+          renderBookingsTable(data.bookings);
+          renderCalendarEvents(data.calendar);
+          updatedAt.textContent=new Date().toLocaleString(locale,{dateStyle:"short",timeStyle:"short"});
+        }catch(err){console.error("Ошибка загрузки:",err);updatedAt.textContent="Ошибка загрузки"}
+      }
+      document.getElementById("refreshAllBtn")?.addEventListener("click",async()=>{
+        const btn=document.getElementById("refreshAllBtn");btn.disabled=true;
+        try{await callApi("/api/refresh-all");await loadDashboard()}catch(e){console.error(e)}finally{btn.disabled=false}
+      });
+      document.getElementById("refreshInstagramBtn")?.addEventListener("click",async()=>{
+        const btn=document.getElementById("refreshInstagramBtn");btn.disabled=true;
+        try{await callApi("/api/instagram/refresh");await loadDashboard()}catch(e){console.error(e)}finally{btn.disabled=false}
+      });
+      loadDashboard();
+    </script>
+  </body>
+</html>`;
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
@@ -24,6 +260,14 @@ export default {
     const path = url.pathname;
 
     try {
+      // Отдаём index.html для корневого пути
+      if (request.method === "GET" && (path === "/" || path === "" || path === "/index.html")) {
+        return new Response(HTML_PAGE, {
+          status: 200,
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      }
+
       if (request.method === "GET" && path === "/api/dashboard") {
         const data = await getDashboard(env);
         return jsonResponse(data);
