@@ -170,18 +170,23 @@ const HTML_PAGE = `<!doctype html>
         const ig=data.instagram;
         const metrics=document.querySelectorAll(".panel.instagram .metric");
         const last=ig.userMetrics?.[ig.userMetrics.length-1];
-        const reach=last?.reach??0;
-        const interactions=last?.total_interactions??0;
-        const saves=last?.saves??0;
-        const engagement=interactions?((interactions/(last?.followers_total||1))*100).toFixed(1):"0";
-        metrics[0].querySelector(".value").textContent=formatNumber(reach);
-        metrics[0].querySelector(".delta").textContent="+18% к прошлой неделе";
-        metrics[1].querySelector(".value").textContent=formatNumber(interactions);
-        metrics[1].querySelector(".delta").textContent="+12% органика";
-        metrics[2].querySelector(".value").textContent=engagement+"%";
-        metrics[2].querySelector(".delta").textContent="+0,9 п.п.";
-        metrics[3].querySelector(".value").textContent=formatNumber(saves);
-        metrics[3].querySelector(".delta").textContent="+5% по топ-постам";
+        if(!last){
+          metrics.forEach(m=>{m.querySelector(".value").textContent="—";m.querySelector(".delta").textContent="Нет данных";});
+          return;
+        }
+        const reach=last?.reach??null;
+        const interactions=last?.total_interactions??null;
+        const saves=last?.saves??null;
+        const followers=last?.followers_total??ig.followers_total??null;
+        const engagement=(interactions&&followers)?((interactions/followers)*100).toFixed(1):null;
+        metrics[0].querySelector(".value").textContent=reach!=null?formatNumber(reach):"—";
+        metrics[0].querySelector(".delta").textContent="охват за день";
+        metrics[1].querySelector(".value").textContent=interactions!=null?formatNumber(interactions):"—";
+        metrics[1].querySelector(".delta").textContent="взаимодействия";
+        metrics[2].querySelector(".value").textContent=engagement!=null?(engagement+"%"):"—";
+        metrics[2].querySelector(".delta").textContent=followers!=null?("подписчиков: "+formatNumber(followers)):"";
+        metrics[3].querySelector(".value").textContent=saves!=null?formatNumber(saves):"—";
+        metrics[3].querySelector(".delta").textContent="сохранения";
       }
       function renderBookingsTable(bookings){
         const tbody=document.querySelector(".panel.bookings tbody");
@@ -476,14 +481,12 @@ async function getDashboard(env) {
 }
 
 async function syncInstagram(env) {
-  // v2.0: Fixed tool names and date formats
   const now = new Date();
-  const sinceDate = new Date(now.getTime() - 365 * 86400000);
-  const untilDate = new Date(now.getTime());
+  // Запрашиваем только последние 30 дней (Instagram API ограничивает диапазон)
+  const sinceDate = new Date(now.getTime() - 30 * 86400000);
   
-  // Get daily user insights
   const since_str = sinceDate.toISOString().split('T')[0];
-  const until_str = untilDate.toISOString().split('T')[0];
+  const until_str = now.toISOString().split('T')[0];
 
   const dailyInsights = await fetchComposio(
     env,
@@ -641,36 +644,29 @@ async function syncSheets(env) {
                    valuesResponse?.values || [];
     if (!values.length) continue;
 
-    // Ищем строку с заголовками в первых 15 строках (заголовки могут быть в объединённых ячейках)
-    let headerRowIndex = -1;
-    let fioIndex = -1;
-    let contactIndex = -1;
+    // Структура таблицы фиксированная:
+    // Колонка B (индекс 1) = ФИО ребёнка
+    // Колонка H (индекс 7) = КОНТАКТ (имя родителя + телефон)
+    // Данные начинаются с первой строки где колонка A содержит число (порядковый номер)
+    const FIO_COL = 1;      // колонка B
+    const CONTACT_COL = 7;  // колонка H
 
-    for (let r = 0; r < Math.min(15, values.length); r++) {
-      const row = values[r] || [];
-      const fi = findHeaderIndex(row.map(h => String(h || "").trim()), "ФИО");
-      const ci = findHeaderIndex(row.map(h => String(h || "").trim()), "контакт");
-      if (fi !== -1 || ci !== -1) {
-        headerRowIndex = r;
-        fioIndex = fi;
-        contactIndex = ci;
+    // Найдём первую строку с данными (колонка A = число)
+    let dataStartRow = 8; // по умолчанию строка 9 (индекс 8)
+    for (let r = 0; r < Math.min(20, values.length); r++) {
+      const cellA = String(values[r]?.[0] || "").trim();
+      if (/^\d+$/.test(cellA)) {
+        dataStartRow = r;
         break;
       }
     }
 
-    // Если заголовки не найдены — используем фиксированные позиции (A=0, H=7)
-    if (headerRowIndex === -1) {
-      headerRowIndex = 0;
-      fioIndex = 0;      // колонка A
-      contactIndex = 7;  // колонка H
-    }
-
-    for (let i = headerRowIndex + 1; i < values.length; i += 1) {
+    for (let i = dataStartRow; i < values.length; i += 1) {
       const row = values[i];
-      if (!row || (!row[fioIndex] && !row[contactIndex])) continue;
+      if (!row || (!row[FIO_COL] && !row[CONTACT_COL])) continue;
 
-      const fio = String(row[fioIndex] || "").trim();
-      const contactRaw = String(row[contactIndex] || "").trim();
+      const fio = String(row[FIO_COL] || "").trim();
+      const contactRaw = String(row[CONTACT_COL] || "").trim();
       if (!fio && !contactRaw) continue;
 
       const { phone, parentName } = parseContact(contactRaw);
