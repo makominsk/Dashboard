@@ -544,34 +544,29 @@
               <tr>
                 <th>Смена</th>
                 <th>ФИО ребёнка</th>
-                <th>Телефон</th>
-                <th>Родитель</th>
+                <th>Контакт</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>1 смена · 07.06–19.06</td>
                 <td>Соколова Анна Михайловна</td>
-                <td>+7 999 123-45-67</td>
-                <td>Соколова Ирина</td>
+                <td>Соколова Ирина +7 999 123-45-67</td>
               </tr>
               <tr>
                 <td>2 смена · 21.06–03.07</td>
                 <td>Петров Кирилл Андреевич</td>
-                <td>+7 921 555-22-11</td>
-                <td>Петрова Марина</td>
+                <td>Петрова Марина +7 921 555-22-11</td>
               </tr>
               <tr>
                 <td>3 смена · 05.07–17.07</td>
                 <td>Герасимова Алиса Олеговна</td>
-                <td>+7 901 447-90-10</td>
-                <td>Герасимов Олег</td>
+                <td>Герасимов Олег +7 901 447-90-10</td>
               </tr>
               <tr>
                 <td>4 смена · 19.07–31.07</td>
                 <td>Ильин Матвей Сергеевич</td>
-                <td>+7 911 311-08-29</td>
-                <td>Ильина Дарья</td>
+                <td>Ильина Дарья +7 911 311-08-29</td>
               </tr>
             </tbody>
           </table>
@@ -773,16 +768,17 @@
       if (!tbody) return;
       tbody.innerHTML = "";
       if (!bookings || bookings.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted)">Нет данных</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--muted)">Нет данных</td></tr>`;
         return;
       }
       bookings.slice(0, 20).forEach((row) => {
         const tr = document.createElement("tr");
+        // Объединяем имя родителя и телефон в одну колонку "Контакт"
+        const contact = [row.parent_name, row.phone].filter(Boolean).join(" ") || "—";
         tr.innerHTML = `
             <td>${escapeHtml(row.sheet_name || "—")}</td>
             <td>${escapeHtml(row.fio || "—")}</td>
-            <td>${escapeHtml(row.phone || "—")}</td>
-            <td>${escapeHtml(row.parent_name || "—")}</td>
+            <td>${escapeHtml(contact)}</td>
           `;
         tbody.appendChild(tr);
       });
