@@ -246,21 +246,11 @@ export default {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
-    if (!checkAuth(request, env)) {
-      return new Response("Unauthorized", {
-        status: 401,
-        headers: {
-          ...CORS_HEADERS,
-          "WWW-Authenticate": 'Basic realm="Dashboard"',
-        },
-      });
-    }
-
     const url = new URL(request.url);
     const path = url.pathname;
 
     try {
-      // Отдаём index.html для корневого пути
+      // Отдаём index.html для корневого пути — без авторизации
       if (request.method === "GET" && (path === "/" || path === "" || path === "/index.html")) {
         return new Response(HTML_PAGE, {
           status: 200,
@@ -268,29 +258,43 @@ export default {
         });
       }
 
+      // GET /api/dashboard — публичный, без авторизации (для Vercel фронтенда)
       if (request.method === "GET" && path === "/api/dashboard") {
         const data = await getDashboard(env);
         return jsonResponse(data);
       }
 
-      if (request.method === "POST" && path === "/api/instagram/refresh") {
-        const result = await syncInstagram(env);
-        return jsonResponse({ ok: true, result });
-      }
+      // POST эндпоинты — требуют авторизации
+      if (request.method === "POST") {
+        if (!checkAuth(request, env)) {
+          return new Response("Unauthorized", {
+            status: 401,
+            headers: {
+              ...CORS_HEADERS,
+              "WWW-Authenticate": 'Basic realm="Dashboard"',
+            },
+          });
+        }
 
-      if (request.method === "POST" && path === "/api/bookings/refresh") {
-        const result = await syncSheets(env);
-        return jsonResponse({ ok: true, result });
-      }
+        if (path === "/api/instagram/refresh") {
+          const result = await syncInstagram(env);
+          return jsonResponse({ ok: true, result });
+        }
 
-      if (request.method === "POST" && path === "/api/calendar/refresh") {
-        const result = await syncCalendar(env, true);
-        return jsonResponse({ ok: true, result });
-      }
+        if (path === "/api/bookings/refresh") {
+          const result = await syncSheets(env);
+          return jsonResponse({ ok: true, result });
+        }
 
-      if (request.method === "POST" && path === "/api/refresh-all") {
-        const result = await refreshAll(env);
-        return jsonResponse({ ok: true, result });
+        if (path === "/api/calendar/refresh") {
+          const result = await syncCalendar(env, true);
+          return jsonResponse({ ok: true, result });
+        }
+
+        if (path === "/api/refresh-all") {
+          const result = await refreshAll(env);
+          return jsonResponse({ ok: true, result });
+        }
       }
 
       return new Response("Not Found", { status: 404, headers: CORS_HEADERS });

@@ -650,10 +650,9 @@
 
     <script defer src="https://radiopotok.ru/f/script6/16e18ac98844452e0eba34f615bdeaad8ba8a53a7e59e232de17502a17cd57d3.js" charset="UTF-8"></script>
     <script>
-      // Конфигурация API
-      const apiBase = window.DASHBOARD_API_BASE || "https://dashboard-backend.mako-maryia.workers.dev";
-      // Убран захардкоженный пароль — если Basic Auth не нужен, воркер пропускает все запросы
-      const authHeader = window.DASHBOARD_AUTH || "";
+      // Конфигурация API — воркер Cloudflare (публичный GET /api/dashboard)
+      const apiBase = "https://dashboard-backend.mako-maryia.workers.dev";
+      const authHeader = "";
 
       const locale = "ru-RU";
       const radioDay = document.getElementById("radioDay");
