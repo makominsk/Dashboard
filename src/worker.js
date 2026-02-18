@@ -420,6 +420,7 @@ async function fetchComposio(env, connectionId, tool, input) {
     },
     body: JSON.stringify({
       connected_account_id: connectionId,
+      entity_id: env.COMPOSIO_ENTITY_ID || "default",
       arguments: input,
     }),
   });
