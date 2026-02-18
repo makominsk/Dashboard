@@ -347,6 +347,67 @@ export default {
         });
       }
 
+      // GET /api/debug-ig — диагностика Instagram
+      if (request.method === "GET" && path === "/api/debug-ig") {
+        const now = new Date();
+        const since_str = new Date(now.getTime() - 7 * 86400000).toISOString().split('T')[0];
+        const until_str = now.toISOString().split('T')[0];
+
+        let insightsRaw = null;
+        try {
+          const res = await fetchComposio(
+            env,
+            env.COMPOSIO_CONN_IG,
+            "INSTAGRAM_GET_USER_INSIGHTS",
+            {
+              ig_user_id: env.IG_USER_ID,
+              metric: ["reach", "total_interactions", "saves", "follower_count"],
+              period: "day",
+              since: since_str,
+              until: until_str,
+            }
+          );
+          // Показываем сырой ответ (первые 2 элемента)
+          const payload = res?.data || res;
+          const series = payload?.data || [];
+          insightsRaw = {
+            ok: true,
+            top_keys: Object.keys(res || {}),
+            payload_keys: Object.keys(payload || {}),
+            series_count: series.length,
+            first_metric: series[0] ? { name: series[0].name, values_count: (series[0].values||[]).length, first_value: series[0].values?.[0] } : null,
+          };
+        } catch (e) {
+          insightsRaw = { ok: false, error: e.message };
+        }
+
+        let userInfoRaw = null;
+        try {
+          const res = await fetchComposio(
+            env,
+            env.COMPOSIO_CONN_IG,
+            "INSTAGRAM_GET_USER_INFO",
+            { ig_user_id: env.IG_USER_ID }
+          );
+          userInfoRaw = { ok: true, keys: Object.keys(res || {}), followers_count: res?.followers_count, data: res?.data ? Object.keys(res.data) : null };
+        } catch (e) {
+          userInfoRaw = { ok: false, error: e.message };
+        }
+
+        // Проверим что в D1
+        const dbRows = await env.DB.prepare("SELECT COUNT(*) as cnt FROM instagram_user_metrics").all();
+        const dbSample = await env.DB.prepare("SELECT * FROM instagram_user_metrics ORDER BY date DESC LIMIT 3").all();
+
+        return jsonResponse({
+          since: since_str,
+          until: until_str,
+          insights: insightsRaw,
+          user_info: userInfoRaw,
+          db_count: dbRows.results?.[0]?.cnt,
+          db_sample: dbSample.results,
+        });
+      }
+
       // POST эндпоинты — публичные (внутренний дашборд)
       if (request.method === "POST") {
         if (path === "/api/instagram/refresh") {
@@ -447,9 +508,11 @@ async function getDashboard(env) {
     .bind(monthAgo)
     .all();
 
+  // Новые записи за последние 48 часов, отсортированные по дате добавления (новые снизу)
+  const twoDaysAgo = new Date(now.getTime() - 48 * 3600000).toISOString().slice(0, 19);
   const bookings = await env.DB.prepare(
-    "SELECT * FROM bookings_raw ORDER BY updated_at DESC LIMIT 20"
-  ).all();
+    "SELECT * FROM bookings_raw WHERE updated_at >= ? ORDER BY updated_at ASC LIMIT 50"
+  ).bind(twoDaysAgo).all();
 
   // Исправлено: показываем события от сегодня вперёд, а не 7 дней назад
   const calendar = await env.DB.prepare(
