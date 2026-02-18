@@ -167,26 +167,37 @@ const HTML_PAGE = `<!doctype html>
       function escapeHtml(str){return String(str||"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]))}
 
       function renderInstagramMetrics(data){
-        const ig=data.instagram;
-        const metrics=document.querySelectorAll(".panel.instagram .metric");
-        const last=ig.userMetrics?.[ig.userMetrics.length-1];
-        if(!last){
-          metrics.forEach(m=>{m.querySelector(".value").textContent="—";m.querySelector(".delta").textContent="Нет данных";});
+        const ig = data.instagram;
+        const metrics = document.querySelectorAll(".panel.instagram .metric");
+        const last = ig.userMetrics?.[ig.userMetrics.length - 1];
+        if (!last) {
+          metrics.forEach(m => {
+            m.querySelector(".value").textContent = "—";
+            m.querySelector(".delta").textContent = "Нет данных";
+          });
           return;
         }
-        const reach=last?.reach??null;
-        const interactions=last?.total_interactions??null;
-        const saves=last?.saves??null;
-        const followers=last?.followers_total??ig.followers_total??null;
-        const engagement=(interactions&&followers)?((interactions/followers)*100).toFixed(1):null;
-        metrics[0].querySelector(".value").textContent=reach!=null?formatNumber(reach):"—";
-        metrics[0].querySelector(".delta").textContent="охват за день";
-        metrics[1].querySelector(".value").textContent=interactions!=null?formatNumber(interactions):"—";
-        metrics[1].querySelector(".delta").textContent="взаимодействия";
-        metrics[2].querySelector(".value").textContent=engagement!=null?(engagement+"%"):"—";
-        metrics[2].querySelector(".delta").textContent=followers!=null?("подписчиков: "+formatNumber(followers)):"";
-        metrics[3].querySelector(".value").textContent=saves!=null?formatNumber(saves):"—";
-        metrics[3].querySelector(".delta").textContent="сохранения";
+
+        // Показы (reach)
+        const reach = last?.reach ?? null;
+        metrics[0].querySelector(".value").textContent = reach != null ? formatNumber(reach) : "—";
+        metrics[0].querySelector(".delta").textContent = reach != null ? "охват за день" : "Нет данных";
+
+        // Охват (total_interactions)
+        const interactions = last?.total_interactions ?? null;
+        metrics[1].querySelector(".value").textContent = interactions != null ? formatNumber(interactions) : "—";
+        metrics[1].querySelector(".delta").textContent = interactions != null ? "взаимодействия" : "Нет данных";
+
+        // Вовлечённость (engagement)
+        const followers = last?.followers_total ?? ig.followers_total ?? null;
+        const engagement = (interactions && followers) ? ((interactions / followers) * 100).toFixed(1) : null;
+        metrics[2].querySelector(".value").textContent = engagement != null ? (engagement + "%") : "—";
+        metrics[2].querySelector(".delta").textContent = followers != null ? ("подписчиков: " + formatNumber(followers)) : "Нет данных";
+
+        // Сохранения (saves)
+        const saves = last?.saves ?? null;
+        metrics[3].querySelector(".value").textContent = saves != null ? formatNumber(saves) : "—";
+        metrics[3].querySelector(".delta").textContent = saves != null ? "сохранения" : "Нет данных";
       }
       function renderBookingsTable(bookings){
         const tbody=document.querySelector(".panel.bookings tbody");
@@ -327,7 +338,7 @@ export default {
             "GOOGLECALENDAR_EVENTS_LIST",
             { calendarId: env.CALENDAR_ID || "primary", timeMin, timeMax, singleEvents: true, maxResults: 5 }
           );
-          calendarFull = { ok: true, timeMin, timeMax, raw_keys: Object.keys(calRes || {}), items: (calRes?.items || calRes?.data?.items || []).slice(0,3) };
+          calendarFull = { ok: true, timeMin, timeMax, raw_keys: Object.keys(calRes || {}), items: (calRes?.items || calRes?.data?.items || []).slice(0, 3) };
         } catch (e) {
           calendarFull = { ok: false, error: e.message };
         }
@@ -375,7 +386,7 @@ export default {
             top_keys: Object.keys(res || {}),
             payload_keys: Object.keys(payload || {}),
             series_count: series.length,
-            first_metric: series[0] ? { name: series[0].name, values_count: (series[0].values||[]).length, first_value: series[0].values?.[0] } : null,
+            first_metric: series[0] ? { name: series[0].name, values_count: (series[0].values || []).length, first_value: series[0].values?.[0] } : null,
           };
         } catch (e) {
           insightsRaw = { ok: false, error: e.message };
@@ -547,7 +558,7 @@ async function syncInstagram(env) {
   const now = new Date();
   // Запрашиваем только последние 30 дней (Instagram API ограничивает диапазон)
   const sinceDate = new Date(now.getTime() - 30 * 86400000);
-  
+
   const since_str = sinceDate.toISOString().split('T')[0];
   const until_str = now.toISOString().split('T')[0];
 
@@ -618,7 +629,7 @@ async function syncInstagram(env) {
   const mediaSinceDate = new Date(now.getTime() - 90 * 86400000);
   const since_unix = parseInt(Math.floor(mediaSinceDate.getTime() / 1000));
   const until_unix = parseInt(Math.floor(now.getTime() / 1000));
-  
+
   const media = await fetchComposio(
     env,
     env.COMPOSIO_CONN_IG,
@@ -634,7 +645,7 @@ async function syncInstagram(env) {
 
   for (const item of mediaItems) {
     if (!item?.id) continue;
-    
+
     const postInsights = await fetchComposio(
       env,
       env.COMPOSIO_CONN_IG,
@@ -702,9 +713,9 @@ async function syncSheets(env) {
       }
     );
 
-    const values = valuesResponse?.data?.valueRanges?.[0]?.values || 
-                   valuesResponse?.valueRanges?.[0]?.values || 
-                   valuesResponse?.values || [];
+    const values = valuesResponse?.data?.valueRanges?.[0]?.values ||
+      valuesResponse?.valueRanges?.[0]?.values ||
+      valuesResponse?.values || [];
     if (!values.length) continue;
 
     // Структура таблицы фиксированная:
@@ -885,7 +896,7 @@ function normalizeInsightsToDaily(raw) {
   // - массивом метрик напрямую (если fetchComposio вернул data.data)
   // - объектом { data: [...], paging: {...} }
   let series = [];
-  
+
   if (Array.isArray(raw)) {
     // raw — уже массив метрик
     series = raw;
