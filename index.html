@@ -650,25 +650,29 @@
 
     <script defer src="https://radiopotok.ru/f/script6/16e18ac98844452e0eba34f615bdeaad8ba8a53a7e59e232de17502a17cd57d3.js" charset="UTF-8"></script>
     <script>
-      const now = new Date();
-      const locale = "ru-RU";
+      // Конфигурация API
+      const apiBase = window.DASHBOARD_API_BASE || "https://dashboard-backend.mako-maryia.workers.dev";
+      const authHeader = window.DASHBOARD_AUTH || "Basic " + btoa((window.DASHBOARD_USER || "mako") + ":" + (window.DASHBOARD_PASS || "mako123"));
 
+      const locale = "ru-RU";
       const radioDay = document.getElementById("radioDay");
       const radioMonth = document.getElementById("radioMonth");
       const radioWeekday = document.getElementById("radioWeekday");
       const updatedAt = document.getElementById("updatedAt");
       const weekGrid = document.getElementById("weekGrid");
 
+      // Инициализация радио даты
+      const now = new Date();
       const dayName = now.toLocaleDateString(locale, { weekday: "long" });
       const dayNumber = now.toLocaleDateString(locale, { day: "numeric" });
       const dayMonth = now.toLocaleDateString(locale, { day: "numeric", month: "long" });
       const monthName = dayMonth.split(" ").slice(1).join(" ");
-
       radioDay.textContent = dayNumber;
       radioMonth.textContent = monthName;
       radioWeekday.textContent = dayName;
       updatedAt.textContent = now.toLocaleString(locale, { dateStyle: "short", timeStyle: "short" });
 
+      // Подсветка сегодняшнего дня в календаре
       const currentDay = now.getDay().toString();
       const dayNodes = weekGrid.querySelectorAll(".day");
       dayNodes.forEach((node) => {
@@ -677,16 +681,16 @@
         }
       });
 
-      const apiBase = window.DASHBOARD_API_BASE || "";
-      const authHeader = window.DASHBOARD_AUTH || "";
-
-      async function callApi(path) {
+      // API функции
+      async function callApi(path, options = {}) {
         const res = await fetch(`${apiBase}${path}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             ...(authHeader ? { Authorization: authHeader } : {}),
+            ...options.headers,
           },
+          ...options,
         });
         if (!res.ok) {
           throw new Error(`API ${path} → ${res.status}`);
@@ -694,15 +698,134 @@
         return res.json();
       }
 
+      async function getDashboard() {
+        const res = await fetch(`${apiBase}/api/dashboard`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(authHeader ? { Authorization: authHeader } : {}),
+          },
+        });
+        if (!res.ok) {
+          throw new Error(`GET /api/dashboard → ${res.status}`);
+        }
+        return res.json();
+      }
+
+      // Рендеринг метрик Instagram
+      function renderInstagramMetrics(data) {
+        const { instagram } = data;
+        const metrics = document.querySelectorAll(".panel.instagram .metric");
+        const spark = document.querySelectorAll(".panel.instagram .spark svg path");
+
+        // Показы
+        const lastUser = instagram.userMetrics?.[instagram.userMetrics.length - 1];
+        const reach = lastUser?.reach ?? 0;
+        const reachEl = metrics[0].querySelector(".value");
+        const reachDelta = metrics[0].querySelector(".delta");
+        reachEl.textContent = formatNumber(reach);
+        reachDelta.textContent = "+18% к прошлой неделе";
+
+        // Охват
+        const totalInteractions = lastUser?.total_interactions ?? 0;
+        const interactionsEl = metrics[1].querySelector(".value");
+        const interactionsDelta = metrics[1].querySelector(".delta");
+        interactionsEl.textContent = formatNumber(totalInteractions);
+        interactionsDelta.textContent = "+12% органика";
+
+        // Вовлечённость
+        const saves = lastUser?.saves ?? 0;
+        const engagement = lastUser?.total_interactions ? ((lastUser.total_interactions / (lastUser.followers_total || 1)) * 100).toFixed(1) : "0";
+        const engagementEl = metrics[2].querySelector(".value");
+        const engagementDelta = metrics[2].querySelector(".delta");
+        engagementEl.textContent = `${engagement}%`;
+        engagementDelta.textContent = "+0,9 п.п.";
+
+        // Сохранения
+        const savesEl = metrics[3].querySelector(".value");
+        const savesDelta = metrics[3].querySelector(".delta");
+        savesEl.textContent = formatNumber(saves);
+        savesDelta.textContent = "+5% по топ-постам";
+
+        // Обновление спарков (простые заглушки)
+        spark.forEach((s, i) => {
+          const d = s.getAttribute("d");
+          if (i === 0) s.setAttribute("d", d.replace(/52/, reach > 100000 ? "52" : "32"));
+          if (i === 1) s.setAttribute("d", d.replace(/42/, totalInteractions > 50000 ? "42" : "22"));
+          if (i === 2) s.setAttribute("d", d.replace(/50/, engagement > 5 ? "50" : "30"));
+          if (i === 3) s.setAttribute("d", d.replace(/48/, saves > 5000 ? "48" : "28"));
+        });
+      }
+
+      // Рендеринг таблицы бронирований
+      function renderBookingsTable(bookings) {
+        const tbody = document.querySelector(".panel.bookings tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        if (!bookings || bookings.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted)">Нет данных</td></tr>`;
+          return;
+        }
+        bookings.slice(0, 20).forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${escapeHtml(row.sheet_name || "—")}</td>
+            <td>${escapeHtml(row.fio || "—")}</td>
+            <td>${escapeHtml(row.phone || "—")}</td>
+            <td>${escapeHtml(row.parent_name || "—")}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Рендеринг событий календаря
+      function renderCalendarEvents(events) {
+        const todayCard = document.querySelector(".panel.schedule .today-card");
+        const todayList = todayCard?.querySelector(".today-list");
+        if (!todayList) return;
+        todayList.innerHTML = "";
+        if (!events || events.length === 0) {
+          todayList.innerHTML = `<div style="color:var(--muted)">Нет событий на неделю</div>`;
+          return;
+        }
+        events.forEach((ev) => {
+          const div = document.createElement("div");
+          const start = ev.start_time ? new Date(ev.start_time).toLocaleString(locale, { hour: "2-digit", minute: "2-digit" }) : "—";
+          div.textContent = `${start} · ${escapeHtml(ev.summary || "—")}`;
+          todayList.appendChild(div);
+        });
+      }
+
+      // Вспомогательные функции
+      function formatNumber(n) {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+        if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+        return String(n);
+      }
+      function escapeHtml(str) {
+        return String(str || "").replace(/[&<>"']/g, s => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[s]));
+      }
+
+      // Загрузка данных при старте
+      async function loadDashboard() {
+        try {
+          const data = await getDashboard();
+          renderInstagramMetrics(data);
+          renderBookingsTable(data.bookings);
+          renderCalendarEvents(data.calendar);
+          updatedAt.textContent = new Date().toLocaleString(locale, { dateStyle: "short", timeStyle: "short" });
+        } catch (err) {
+          console.error("Ошибка загрузки данных:", err);
+          updatedAt.textContent = "Ошибка загрузки";
+        }
+      }
+
+      // Обработчики кнопок
       const refreshAllBtn = document.getElementById("refreshAllBtn");
       refreshAllBtn?.addEventListener("click", async () => {
         refreshAllBtn.disabled = true;
         try {
           await callApi("/api/refresh-all");
-          updatedAt.textContent = new Date().toLocaleString(locale, {
-            dateStyle: "short",
-            timeStyle: "short",
-          });
+          await loadDashboard();
         } catch (err) {
           console.error(err);
         } finally {
@@ -715,16 +838,16 @@
         refreshInstagramBtn.disabled = true;
         try {
           await callApi("/api/instagram/refresh");
-          updatedAt.textContent = new Date().toLocaleString(locale, {
-            dateStyle: "short",
-            timeStyle: "short",
-          });
+          await loadDashboard();
         } catch (err) {
           console.error(err);
         } finally {
           refreshInstagramBtn.disabled = false;
         }
       });
+
+      // Загрузка при старте
+      loadDashboard();
     </script>
   </body>
 </html>
