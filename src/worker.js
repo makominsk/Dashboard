@@ -993,14 +993,50 @@ function findHeaderIndex(headers, needle) {
 }
 
 function parseContact(text) {
-  const phoneMatch = text.match(/(\+?7|8)?\s*\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}/);
-  let phone = phoneMatch ? phoneMatch[0] : "";
-  phone = phone.replace(/\s|\(|\)|-/g, "");
-  if (phone.startsWith("8")) phone = `+7${phone.slice(1)}`;
-  if (phone && !phone.startsWith("+")) phone = `+${phone}`;
+  // Поддержка белорусских (+375) и российских (+7, 8) номеров
+  // Извлекаем номер, убирая все лишние пробелы
 
+  // Сначала пытаемся найти белорусский номер (+375 или 375)
+  let phoneMatch = text.match(/\+?375[\s]*\d{2}[\s]*\d{3}[\s]*\d{2}[\s]*\d{2}/);
+
+  // Если не нашли, ищем российский номер (+7, 7, 8)
+  if (!phoneMatch) {
+    phoneMatch = text.match(/\+?7[\s]*\d{3}[\s]*\d{3}[\s]*\d{2}[\s]*\d{2}/);
+  }
+  if (!phoneMatch) {
+    phoneMatch = text.match(/8[\s]*\d{3}[\s]*\d{3}[\s]*\d{2}[\s]*\d{2}/);
+  }
+
+  // Если всё ещё не нашли, пробуем общий паттерн
+  if (!phoneMatch) {
+    phoneMatch = text.match(/(\+?\d{1,3})?[\s]*\(?\d{2,3}\)?[\s]*\d{2,3}[\s]*\d{2}[\s]*\d{2}/);
+  }
+
+  let phone = phoneMatch ? phoneMatch[0] : "";
+  // Удаляем ВСЕ пробелы, скобки, дефисы
+  phone = phone.replace(/[\s\(\)\-]/g, "");
+
+  // Нормализация: все номера должны начинаться с + и кода страны
+  if (phone.startsWith("375")) {
+    phone = `+${phone}`;
+  } else if (phone.startsWith("8") && phone.length === 11) {
+    // Российский номер starting with 8 -> +7
+    phone = `+7${phone.slice(1)}`;
+  } else if (phone.startsWith("7") && phone.length === 11) {
+    phone = `+${phone}`;
+  } else if (phone.startsWith("+")) {
+    // Уже с плюсом, оставляем как есть
+  } else if (phone.length >= 9) {
+    // Просто цифры, добавляем + (предполагаем полный номер без +)
+    phone = `+${phone}`;
+  } else {
+    phone = "";
+  }
+
+  // Извлекаем имя родителя - всё что до номера
   let parentName = text;
   if (phoneMatch) {
+    // Удаляем найденный номер из текста
     parentName = text.replace(phoneMatch[0], "").trim();
   }
 
