@@ -1,70 +1,81 @@
-# Деплой и настройка (по шагам)
+# Деплой Dashboard
 
-## 1) Установка и логин в Wrangler
+## Быстрый деплой (рекомендуется)
+
+Откройте терминал в папке проекта и выполните:
+
 ```bash
-npm i -g wrangler
-wrangler login
+bash setup_and_deploy.sh
 ```
 
-## 2) Создание D1 и KV
+Скрипт автоматически:
+1. Применит миграцию D1 (`0002_calendar_unique.sql`)
+2. Задеплоит воркер на Cloudflare Workers
+
+---
+
+## GitHub Actions (автодеплой при push)
+
+Workflow уже настроен в `.github/workflows/deploy.yml`.
+
+### Добавить секрет CLOUDFLARE_API_TOKEN:
+
+1. Перейдите: https://dash.cloudflare.com/profile/api-tokens
+2. Нажмите **Create Token**
+3. Выберите шаблон **Edit Cloudflare Workers**
+4. Нажмите **Continue to summary** → **Create Token**
+5. Скопируйте токен
+
+6. Перейдите в репозиторий GitHub: https://github.com/makominsk/Dashboard
+7. **Settings** → **Secrets and variables** → **Actions**
+8. Нажмите **New repository secret**
+9. Name: `CLOUDFLARE_API_TOKEN`
+10. Value: вставьте скопированный токен
+11. Нажмите **Add secret**
+
+После этого каждый `git push` будет автоматически деплоить воркер.
+
+### Запустить деплой вручную через GitHub Actions:
+
+1. Перейдите: https://github.com/makominsk/Dashboard/actions
+2. Выберите workflow **Deploy to Cloudflare Workers**
+3. Нажмите **Run workflow**
+
+---
+
+## Ручной деплой через терминал
+
 ```bash
-wrangler d1 create dashboard
-wrangler kv:namespace create KV
+# Применить миграцию
+npx wrangler d1 migrations apply dashboard --remote
+
+# Задеплоить воркер
+npx wrangler deploy
 ```
 
-Скопируйте выданные `database_id` и `id` в `wrangler.toml`:
-- `[[d1_databases]].database_id`
-- `[[kv_namespaces]].id`
+---
 
-## 3) Секреты и переменные
-Секреты:
+## Переменные окружения (Cloudflare Secrets)
+
+Секреты хранятся в Cloudflare Workers (не в коде):
+
 ```bash
-wrangler secret put COMPOSIO_API_KEY
-wrangler secret put BASIC_USER
-wrangler secret put BASIC_PASS
+npx wrangler secret put COMPOSIO_API_KEY
+npx wrangler secret put BASIC_USER
+npx wrangler secret put BASIC_PASS
 ```
 
-Переменные в `wrangler.toml` уже заполнены, проверьте:
-- `COMPOSIO_API_BASE`
-- `COMPOSIO_EXECUTE_PATH`
-- `SHEETS_ID`
-- `IG_USER_ID`
-- `CALENDAR_ID`
-- `SHEETS_MAX_ROWS`
+---
 
-Также задайте connection IDs (если хотите как vars, можно добавить в `wrangler.toml`):
-- `COMPOSIO_CONN_IG=ac_MrrJZzCfy2Jy`
-- `COMPOSIO_CONN_SHEETS=ac_MrrJZzCfy2Jy` (или другой, если отдельный)
-- `COMPOSIO_CONN_CALENDAR=ac_2UnTItt_Dsp-`
+## Структура проекта
 
-В текущем коде значения читаются из env, поэтому добавьте их либо в `wrangler.toml`, либо через `wrangler secret/vars`.
-
-## 4) Миграции D1
-```bash
-wrangler d1 execute dashboard --file=./migrations/0001_init.sql
 ```
-
-## 5) Деплой воркера
-```bash
-wrangler deploy
+Dashboard/
+├── index.html          # Фронтенд дашборда
+├── src/worker.js       # Cloudflare Worker (бэкенд)
+├── wrangler.toml       # Конфигурация Cloudflare
+├── migrations/
+│   ├── 0001_init.sql              # Начальная схема БД
+│   └── 0002_calendar_unique.sql   # UNIQUE на event_id
+└── .github/workflows/deploy.yml   # GitHub Actions
 ```
-
-## 6) Подключение фронтенда
-В `index.html` уже добавлены:
-- Кнопка **«Обновить все данные»**
-- Вызовы `POST /api/refresh-all` и `POST /api/instagram/refresh`
-
-Если фронт размещён отдельно (Vercel), задайте базу API и auth:
-```html
-<script>
-  window.DASHBOARD_API_BASE = "https://<your-worker>.workers.dev";
-  window.DASHBOARD_AUTH = "Basic <base64(user:pass)>";
-</script>
-```
-
-## 7) Проверка
-1. Нажать «Обновить» в Instagram — обновляются метрики.
-2. Нажать «Обновить все данные» — синк всех источников.
-3. Каждые 30 мин — Google Sheets.
-4. В 00:00 МСК — календарь.
-
