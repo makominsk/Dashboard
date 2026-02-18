@@ -880,16 +880,31 @@ function formatComposioError(data, status) {
 }
 
 function normalizeInsightsToDaily(raw) {
-  const payload = raw?.data || raw;
-  const series = payload?.data || [];
+  // Composio возвращает: { data: [{ name, values: [{value, end_time}] }, ...], paging: {...} }
+  // raw после fetchComposio (который делает data?.data ?? data) может быть:
+  // - массивом метрик напрямую (если fetchComposio вернул data.data)
+  // - объектом { data: [...], paging: {...} }
+  let series = [];
+  
+  if (Array.isArray(raw)) {
+    // raw — уже массив метрик
+    series = raw;
+  } else if (Array.isArray(raw?.data)) {
+    // raw.data — массив метрик
+    series = raw.data;
+  } else if (raw?.data && Array.isArray(raw.data?.data)) {
+    // вложенный data.data
+    series = raw.data.data;
+  }
+
   const byDate = new Map();
 
   for (const metric of series) {
     const name = metric?.name;
     const values = metric?.values || [];
     for (const entry of values) {
-      const endTime = entry?.end_time || entry?.end_time?.date_time || entry?.end_time;
-      const date = (endTime || "").slice(0, 10);
+      const endTime = entry?.end_time;
+      const date = typeof endTime === "string" ? endTime.slice(0, 10) : "";
       if (!date) continue;
       const value = extractNumber(entry?.value);
       const current = byDate.get(date) || {};
