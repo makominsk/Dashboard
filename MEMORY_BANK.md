@@ -45,3 +45,17 @@
 - 2026-02-17: дата под радио увеличена до 88px и сдвинута ниже.
 
 - 2026-02-17: месяц под радио теперь в родительном падеже (формат "17 февраля").
+
+- 2026-02-17: реализован бэкенд на Cloudflare Workers + D1 + KV. Созданы файлы `src/worker.js`, `migrations/0001_init.sql`, `wrangler.toml`, `docs/COMPOSIO.md`, `docs/DEPLOY.md`. В `index.html` добавлена кнопка «Обновить все данные» и вызовы `/api/refresh-all` и `/api/instagram/refresh`, поддержка `window.DASHBOARD_API_BASE` и `window.DASHBOARD_AUTH`.
+
+- 2026-02-17: эндпоинты воркера: `GET /api/dashboard`, `POST /api/instagram/refresh`, `POST /api/bookings/refresh`, `POST /api/calendar/refresh`, `POST /api/refresh-all`. Basic Auth включён через `BASIC_USER/BASIC_PASS` (если заданы). Cron: `*/30 * * * *` (Sheets), `0 * * * *` (Calendar по МСК).
+
+- 2026-02-17: D1 database создан и подключён: `database_id = 79a1f7e8-2538-44e0-9bc9-788529a8f25d`. KV namespace создан и подключён: `id = 29f1b76f2de845d7b408f47a03f470bb`.
+
+- 2026-02-17: деплой воркера успешен: `https://dashboard-backend.mako-maryia.workers.dev`.
+
+- 2026-02-17: миграции выполнены локально и затем remote (`--remote`) успешно.
+
+- 2026-02-17: секреты загружены: `COMPOSIO_API_KEY`, `BASIC_USER`, `BASIC_PASS`. Basic Auth проверен: `GET /api/dashboard` с корректной авторизацией даёт 200.
+
+- 2026-02-17: Composio ответил 500 на sync, ошибка: “This endpoint is no longer available. Please upgrade to v3 APIs.” Переключено на v3: `COMPOSIO_EXECUTE_PATH = /api/v3/tools/execute`, формат запроса изменён на `connected_account_id` + `arguments`. Добавлена расширенная обработка ошибок (возврат текста/JSON). Нужен **повторный deploy** и повторный вызов sync для получения новой ошибки/успеха.

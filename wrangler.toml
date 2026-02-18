@@ -1,0 +1,26 @@
+name = "dashboard-backend"
+main = "src/worker.js"
+compatibility_date = "2026-02-17"
+
+[vars]
+COMPOSIO_API_BASE = "https://backend.composio.dev"
+COMPOSIO_EXECUTE_PATH = "/api/v3/tools/execute"
+COMPOSIO_CONN_IG = "ac_MrrJZzCfy2Jy"
+COMPOSIO_CONN_SHEETS = "ac_MrrJZzCfy2Jy"
+COMPOSIO_CONN_CALENDAR = "ac_2UnTItt_Dsp-"
+SHEETS_ID = "1pk2pgc9VTkCnNT9w0InJJ6LjOzzdfVQfkAER_-sjdm0"
+IG_USER_ID = "58650205850"
+CALENDAR_ID = "primary"
+SHEETS_MAX_ROWS = "2000"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "29f1b76f2de845d7b408f47a03f470bb"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dashboard"
+database_id = "79a1f7e8-2538-44e0-9bc9-788529a8f25d"
+
+[triggers]
+crons = ["*/30 * * * *", "0 * * * *"]

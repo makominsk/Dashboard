@@ -66,6 +66,13 @@
         align-items: center;
         gap: 24px;
         margin-bottom: 32px;
+        flex-wrap: wrap;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
       }
 
       .title {
@@ -448,6 +455,9 @@
           <h1 class="title">Летние смены · Центр управления</h1>
           <p class="subtitle">Единая панель для аналитики Instagram и бронирований лагеря</p>
         </div>
+        <div class="header-actions">
+          <button class="cta" id="refreshAllBtn" type="button">Обновить все данные</button>
+        </div>
       </header>
 
       <section class="grid">
@@ -457,7 +467,7 @@
               <h3>Instagram аналитика</h3>
               <p>Сводка по публикациям за 7 дней</p>
             </div>
-            <button class="cta" type="button">Обновить</button>
+            <button class="cta" id="refreshInstagramBtn" type="button">Обновить</button>
           </div>
 
           <div class="metrics">
@@ -667,6 +677,55 @@
       dayNodes.forEach((node) => {
         if (node.dataset.day === currentDay) {
           node.classList.add("today");
+        }
+      });
+
+      const apiBase = window.DASHBOARD_API_BASE || "";
+      const authHeader = window.DASHBOARD_AUTH || "";
+
+      async function callApi(path) {
+        const res = await fetch(`${apiBase}${path}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authHeader ? { Authorization: authHeader } : {}),
+          },
+        });
+        if (!res.ok) {
+          throw new Error(`API ${path} → ${res.status}`);
+        }
+        return res.json();
+      }
+
+      const refreshAllBtn = document.getElementById("refreshAllBtn");
+      refreshAllBtn?.addEventListener("click", async () => {
+        refreshAllBtn.disabled = true;
+        try {
+          await callApi("/api/refresh-all");
+          updatedAt.textContent = new Date().toLocaleString(locale, {
+            dateStyle: "short",
+            timeStyle: "short",
+          });
+        } catch (err) {
+          console.error(err);
+        } finally {
+          refreshAllBtn.disabled = false;
+        }
+      });
+
+      const refreshInstagramBtn = document.getElementById("refreshInstagramBtn");
+      refreshInstagramBtn?.addEventListener("click", async () => {
+        refreshInstagramBtn.disabled = true;
+        try {
+          await callApi("/api/instagram/refresh");
+          updatedAt.textContent = new Date().toLocaleString(locale, {
+            dateStyle: "short",
+            timeStyle: "short",
+          });
+        } catch (err) {
+          console.error(err);
+        } finally {
+          refreshInstagramBtn.disabled = false;
         }
       });
     </script>
