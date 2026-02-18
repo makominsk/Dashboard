@@ -264,8 +264,42 @@ export default {
         return jsonResponse(data);
       }
 
-      // GET /api/debug — диагностика конфигурации
+      // GET /api/debug — диагностика конфигурации + тест Composio
       if (request.method === "GET" && path === "/api/debug") {
+        // Тест подключения к Composio (Calendar — самый простой)
+        let composioTest = null;
+        try {
+          const testRes = await fetchComposio(
+            env,
+            env.COMPOSIO_CONN_CALENDAR,
+            "GOOGLECALENDAR_EVENTS_LIST",
+            {
+              calendarId: env.CALENDAR_ID || "primary",
+              timeMin: new Date().toISOString(),
+              timeMax: new Date(Date.now() + 86400000).toISOString(),
+              singleEvents: true,
+              maxResults: 1,
+            }
+          );
+          composioTest = { ok: true, items: (testRes?.items || testRes?.data?.items || []).length };
+        } catch (e) {
+          composioTest = { ok: false, error: e.message };
+        }
+
+        // Тест Sheets
+        let sheetsTest = null;
+        try {
+          const testRes = await fetchComposio(
+            env,
+            env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
+            "GOOGLESHEETS_GET_SHEET_NAMES",
+            { spreadsheet_id: env.SHEETS_ID }
+          );
+          sheetsTest = { ok: true, data: testRes };
+        } catch (e) {
+          sheetsTest = { ok: false, error: e.message };
+        }
+
         return jsonResponse({
           has_composio_key: !!env.COMPOSIO_API_KEY,
           has_conn_ig: !!env.COMPOSIO_CONN_IG,
@@ -275,6 +309,8 @@ export default {
           has_ig_user_id: !!env.IG_USER_ID,
           composio_base: env.COMPOSIO_API_BASE || null,
           composio_path: env.COMPOSIO_EXECUTE_PATH || null,
+          calendar_test: composioTest,
+          sheets_test: sheetsTest,
         });
       }
 
