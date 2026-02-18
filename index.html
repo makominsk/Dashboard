@@ -652,7 +652,8 @@
     <script>
       // Конфигурация API
       const apiBase = window.DASHBOARD_API_BASE || "https://dashboard-backend.mako-maryia.workers.dev";
-      const authHeader = window.DASHBOARD_AUTH || "Basic " + btoa((window.DASHBOARD_USER || "mako") + ":" + (window.DASHBOARD_PASS || "mako123"));
+      // Убран захардкоженный пароль — если Basic Auth не нужен, воркер пропускает все запросы
+      const authHeader = window.DASHBOARD_AUTH || "";
 
       const locale = "ru-RU";
       const radioDay = document.getElementById("radioDay");

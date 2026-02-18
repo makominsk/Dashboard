@@ -130,10 +130,11 @@ async function getDashboard(env) {
     "SELECT * FROM bookings_raw ORDER BY updated_at DESC LIMIT 20"
   ).all();
 
+  // Исправлено: показываем события от сегодня вперёд, а не 7 дней назад
   const calendar = await env.DB.prepare(
     "SELECT * FROM calendar_events WHERE start_time >= ? ORDER BY start_time ASC"
   )
-    .bind(weekAgo)
+    .bind(today)
     .all();
 
   const latestUser =
