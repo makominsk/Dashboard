@@ -338,25 +338,23 @@ async function syncSheets(env) {
       const contactRaw = String(row[contactIndex] || "").trim();
       if (!fio && !contactRaw) continue;
 
-      const hash = await sha256(`${sheetName}|${i + 1}|${fio}|${contactRaw}`);
-      const exists = await env.DB.prepare(
-        "SELECT 1 FROM bookings_raw WHERE hash = ? LIMIT 1"
-      )
-        .bind(hash)
-        .first();
-
-      if (exists) continue;
-
       const { phone, parentName } = parseContact(contactRaw);
+      const hash = await sha256(`${sheetName}|${i + 1}|${fio}|${contactRaw}`);
 
-      await env.DB.prepare(
+      const result = await env.DB.prepare(
         `INSERT INTO bookings_raw (sheet_name, row_index, fio, contact_raw, phone, parent_name, hash)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(hash) DO UPDATE SET
+           fio=excluded.fio,
+           contact_raw=excluded.contact_raw,
+           phone=excluded.phone,
+           parent_name=excluded.parent_name,
+           updated_at=datetime('now')`
       )
         .bind(sheetName, i + 1, fio, contactRaw, phone, parentName, hash)
         .run();
 
-      inserted += 1;
+      if (result.meta?.changes > 0) inserted += 1;
     }
   }
 
@@ -401,7 +399,12 @@ async function syncCalendar(env, force) {
 
     await env.DB.prepare(
       `INSERT INTO calendar_events (event_id, summary, start_time, end_time)
-       VALUES (?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(event_id) DO UPDATE SET
+         summary=excluded.summary,
+         start_time=excluded.start_time,
+         end_time=excluded.end_time,
+         updated_at=datetime('now')`
     )
       .bind(event?.id || "", event?.summary || "", start, end)
       .run();

@@ -780,20 +780,62 @@
 
       // Рендеринг событий календаря
       function renderCalendarEvents(events) {
+        // 1. Обновляем недельный грид — очищаем старые события из API и вставляем новые
+        const dayNodes = weekGrid.querySelectorAll(".day");
+        dayNodes.forEach((node) => {
+          // Удаляем только элементы с классом .event (добавленные из API), оставляем .name
+          node.querySelectorAll(".event").forEach((el) => el.remove());
+        });
+
+        // 2. Обновляем блок «Сегодня»
         const todayCard = document.querySelector(".panel.schedule .today-card");
         const todayList = todayCard?.querySelector(".today-list");
-        if (!todayList) return;
-        todayList.innerHTML = "";
+        if (todayList) {
+          todayList.innerHTML = "";
+        }
+
         if (!events || events.length === 0) {
-          todayList.innerHTML = `<div style="color:var(--muted)">Нет событий на неделю</div>`;
+          if (todayList) {
+            todayList.innerHTML = `<div style="color:var(--muted)">Нет событий на неделю</div>`;
+          }
           return;
         }
+
+        const todayDow = new Date().getDay(); // 0=Вс, 1=Пн, ...
+
         events.forEach((ev) => {
-          const div = document.createElement("div");
-          const start = ev.start_time ? new Date(ev.start_time).toLocaleString(locale, { hour: "2-digit", minute: "2-digit" }) : "—";
-          div.textContent = `${start} · ${escapeHtml(ev.summary || "—")}`;
-          todayList.appendChild(div);
+          const startDate = ev.start_time ? new Date(ev.start_time) : null;
+          const timeStr = startDate
+            ? startDate.toLocaleString(locale, { hour: "2-digit", minute: "2-digit" })
+            : "—";
+          const summary = escapeHtml(ev.summary || "—");
+
+          // Вставляем событие в нужную ячейку недельного грида
+          if (startDate) {
+            const dow = startDate.getDay().toString();
+            const targetDay = weekGrid.querySelector(`.day[data-day="${dow}"]`);
+            if (targetDay) {
+              const evEl = document.createElement("div");
+              evEl.className = "event chip";
+              evEl.style.cssText = "font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;";
+              evEl.title = `${timeStr} · ${ev.summary || ""}`;
+              evEl.textContent = `${timeStr} · ${ev.summary || "—"}`;
+              targetDay.appendChild(evEl);
+            }
+          }
+
+          // Добавляем в список «Сегодня» только события текущего дня
+          if (todayList && startDate && startDate.getDay() === todayDow) {
+            const div = document.createElement("div");
+            div.textContent = `${timeStr} · ${ev.summary || "—"}`;
+            todayList.appendChild(div);
+          }
         });
+
+        // Если сегодня нет событий — показываем заглушку
+        if (todayList && todayList.children.length === 0) {
+          todayList.innerHTML = `<div style="color:var(--muted)">Нет событий на сегодня</div>`;
+        }
       }
 
       // Вспомогательные функции
@@ -803,7 +845,7 @@
         return String(n);
       }
       function escapeHtml(str) {
-        return String(str || "").replace(/[&<>"']/g, s => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[s]));
+        return String(str || "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
       }
 
       // Загрузка данных при старте
