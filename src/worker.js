@@ -286,18 +286,45 @@ export default {
           composioTest = { ok: false, error: e.message };
         }
 
-        // Тест Sheets
+        // Тест Sheets — первые 10 строк первого листа
         let sheetsTest = null;
         try {
-          const testRes = await fetchComposio(
+          const namesRes = await fetchComposio(
             env,
             env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
             "GOOGLESHEETS_GET_SHEET_NAMES",
             { spreadsheet_id: env.SHEETS_ID }
           );
-          sheetsTest = { ok: true, data: testRes };
+          const sheetNames = namesRes?.sheet_names || namesRes?.data?.sheet_names || [];
+          let sample = null;
+          if (sheetNames.length > 0) {
+            const valRes = await fetchComposio(
+              env,
+              env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
+              "GOOGLESHEETS_BATCH_GET",
+              { spreadsheet_id: env.SHEETS_ID, ranges: [`${sheetNames[0]}!A1:Z10`] }
+            );
+            const rows = valRes?.valueRanges?.[0]?.values || valRes?.data?.valueRanges?.[0]?.values || [];
+            sample = { sheet: sheetNames[0], rows };
+          }
+          sheetsTest = { ok: true, sheet_names: sheetNames, sample };
         } catch (e) {
           sheetsTest = { ok: false, error: e.message };
+        }
+
+        // Тест Calendar — расширенный диапазон
+        let calendarFull = null;
+        try {
+          const { timeMin, timeMax } = getWeekRangeMsk(new Date());
+          const calRes = await fetchComposio(
+            env,
+            env.COMPOSIO_CONN_CALENDAR,
+            "GOOGLECALENDAR_EVENTS_LIST",
+            { calendarId: env.CALENDAR_ID || "primary", timeMin, timeMax, singleEvents: true, maxResults: 5 }
+          );
+          calendarFull = { ok: true, timeMin, timeMax, raw_keys: Object.keys(calRes || {}), items: (calRes?.items || calRes?.data?.items || []).slice(0,3) };
+        } catch (e) {
+          calendarFull = { ok: false, error: e.message };
         }
 
         return jsonResponse({
@@ -310,6 +337,7 @@ export default {
           composio_base: env.COMPOSIO_API_BASE || null,
           composio_path: env.COMPOSIO_EXECUTE_PATH || null,
           calendar_test: composioTest,
+          calendar_full: calendarFull,
           sheets_test: sheetsTest,
         });
       }
