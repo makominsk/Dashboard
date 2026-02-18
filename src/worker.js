@@ -264,18 +264,22 @@ export default {
         return jsonResponse(data);
       }
 
-      // POST эндпоинты — требуют авторизации
-      if (request.method === "POST") {
-        if (!checkAuth(request, env)) {
-          return new Response("Unauthorized", {
-            status: 401,
-            headers: {
-              ...CORS_HEADERS,
-              "WWW-Authenticate": 'Basic realm="Dashboard"',
-            },
-          });
-        }
+      // GET /api/debug — диагностика конфигурации
+      if (request.method === "GET" && path === "/api/debug") {
+        return jsonResponse({
+          has_composio_key: !!env.COMPOSIO_API_KEY,
+          has_conn_ig: !!env.COMPOSIO_CONN_IG,
+          has_conn_sheets: !!env.COMPOSIO_CONN_SHEETS,
+          has_conn_calendar: !!env.COMPOSIO_CONN_CALENDAR,
+          has_sheets_id: !!env.SHEETS_ID,
+          has_ig_user_id: !!env.IG_USER_ID,
+          composio_base: env.COMPOSIO_API_BASE || null,
+          composio_path: env.COMPOSIO_EXECUTE_PATH || null,
+        });
+      }
 
+      // POST эндпоинты — публичные (внутренний дашборд)
+      if (request.method === "POST") {
         if (path === "/api/instagram/refresh") {
           const result = await syncInstagram(env);
           return jsonResponse({ ok: true, result });
