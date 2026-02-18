@@ -507,6 +507,7 @@ async function getDashboard(env) {
   const monthAgo = formatDate(new Date(now.getTime() - 30 * 86400000));
   const yearAgo = formatDate(new Date(now.getTime() - 365 * 86400000));
 
+  // Получаем метрики за последние 30 дней
   const userMetrics = await env.DB.prepare(
     "SELECT * FROM instagram_user_metrics WHERE date >= ? ORDER BY date ASC"
   )
@@ -519,13 +520,27 @@ async function getDashboard(env) {
     .bind(monthAgo)
     .all();
 
+  // Агрегация метрик за 30 дней
+  const monthMetrics = await env.DB.prepare(
+    `SELECT 
+      SUM(reach) as total_reach,
+      SUM(total_interactions) as total_interactions,
+      SUM(saves) as total_saves,
+      AVG(reach) as avg_reach,
+      COUNT(*) as days_count
+    FROM instagram_user_metrics 
+    WHERE date >= ?`
+  ).bind(monthAgo).all();
+
+  const monthData = monthMetrics.results?.[0] || {};
+
   // Новые записи за последние 48 часов, отсортированные по дате добавления (новые снизу)
   const twoDaysAgo = new Date(now.getTime() - 48 * 3600000).toISOString().slice(0, 19);
   const bookings = await env.DB.prepare(
     "SELECT * FROM bookings_raw WHERE updated_at >= ? ORDER BY updated_at ASC LIMIT 50"
   ).bind(twoDaysAgo).all();
 
-  // Исправлено: показываем события от сегодня вперёд, а не 7 дней назад
+  // Показываем события от сегодня вперёд
   const calendar = await env.DB.prepare(
     "SELECT * FROM calendar_events WHERE start_time >= ? ORDER BY start_time ASC"
   )
@@ -546,6 +561,14 @@ async function getDashboard(env) {
       year: yearAgo,
       followers_total: latestUser?.followers_total ?? null,
       followers_delta_month: latestUser?.followers_delta_month ?? null,
+      // Агрегированные метрики за 30 дней
+      monthSummary: {
+        total_reach: monthData.total_reach ?? null,
+        total_interactions: monthData.total_interactions ?? null,
+        total_saves: monthData.total_saves ?? null,
+        avg_reach: monthData.avg_reach ? Math.round(monthData.avg_reach) : null,
+        days_count: monthData.days_count ?? 0,
+      },
       userMetrics: userMetrics.results || [],
       postMetrics: postMetrics.results || [],
     },
