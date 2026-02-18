@@ -160,8 +160,12 @@ async function getDashboard(env) {
 
 async function syncInstagram(env) {
   const now = new Date();
-  const since = Math.floor((now.getTime() - 365 * 86400000) / 1000);
-  const until = Math.floor(now.getTime() / 1000);
+  const sinceDate = new Date(now.getTime() - 365 * 86400000);
+  const untilDate = new Date(now.getTime());
+  
+  // Convert to ISO date strings (YYYY-MM-DD format) as expected by Composio
+  const since = sinceDate.toISOString().split('T')[0];
+  const until = untilDate.toISOString().split('T')[0];
 
   const dailyInsights = await fetchComposio(
     env,
@@ -226,14 +230,15 @@ async function syncInstagram(env) {
       .run();
   }
 
-  const mediaSince = Math.floor((now.getTime() - 90 * 86400000) / 1000);
+  const mediaSinceDate = new Date(now.getTime() - 90 * 86400000);
+  const mediaSince = mediaSinceDate.toISOString().split('T')[0];
   const media = await fetchComposio(
     env,
     env.COMPOSIO_CONN_IG,
-    "INSTAGRAM_GET_IG_USER_MEDIA",
+    "INSTAGRAM_GET_USER_MEDIA",
     {
-      ig_user_id: env.IG_USER_ID,
-      since: mediaSince,
+      since: parseInt(Math.floor(mediaSinceDate.getTime() / 1000)),
+      until: parseInt(Math.floor(now.getTime() / 1000)),
       fields: "id,timestamp,media_type",
     }
   );
@@ -245,10 +250,10 @@ async function syncInstagram(env) {
     const insights = await fetchComposio(
       env,
       env.COMPOSIO_CONN_IG,
-      "INSTAGRAM_GET_IG_MEDIA_INSIGHTS",
+      "INSTAGRAM_GET_POST_INSIGHTS",
       {
-        ig_media_id: item.id,
-        metric: ["reach", "likes", "comments", "saves", "shares"],
+        ig_post_id: item.id,
+        metric: ["reach", "likes", "comments", "saved", "shares"],
       }
     );
 
