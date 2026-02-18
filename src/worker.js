@@ -613,12 +613,31 @@ async function syncSheets(env) {
                    valuesResponse?.values || [];
     if (!values.length) continue;
 
-    const headers = values[0].map((h) => String(h || "").trim());
-    const fioIndex = findHeaderIndex(headers, "ФИО");
-    const contactIndex = findHeaderIndex(headers, "контакт");
-    if (fioIndex === -1 || contactIndex === -1) continue;
+    // Ищем строку с заголовками в первых 15 строках (заголовки могут быть в объединённых ячейках)
+    let headerRowIndex = -1;
+    let fioIndex = -1;
+    let contactIndex = -1;
 
-    for (let i = 1; i < values.length; i += 1) {
+    for (let r = 0; r < Math.min(15, values.length); r++) {
+      const row = values[r] || [];
+      const fi = findHeaderIndex(row.map(h => String(h || "").trim()), "ФИО");
+      const ci = findHeaderIndex(row.map(h => String(h || "").trim()), "контакт");
+      if (fi !== -1 || ci !== -1) {
+        headerRowIndex = r;
+        fioIndex = fi;
+        contactIndex = ci;
+        break;
+      }
+    }
+
+    // Если заголовки не найдены — используем фиксированные позиции (A=0, H=7)
+    if (headerRowIndex === -1) {
+      headerRowIndex = 0;
+      fioIndex = 0;      // колонка A
+      contactIndex = 7;  // колонка H
+    }
+
+    for (let i = headerRowIndex + 1; i < values.length; i += 1) {
       const row = values[i];
       if (!row || (!row[fioIndex] && !row[contactIndex])) continue;
 
@@ -876,7 +895,7 @@ function formatDateInTimeZone(date, timeZone) {
 function getWeekRangeMsk(now) {
   const start = formatDateInTimeZone(now, "Europe/Moscow");
   const end = formatDateInTimeZone(
-    new Date(now.getTime() + 7 * 86400000),
+    new Date(now.getTime() + 30 * 86400000),
     "Europe/Moscow"
   );
 
