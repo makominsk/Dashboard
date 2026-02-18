@@ -59,3 +59,12 @@
 - 2026-02-17: секреты загружены: `COMPOSIO_API_KEY`, `BASIC_USER`, `BASIC_PASS`. Basic Auth проверен: `GET /api/dashboard` с корректной авторизацией даёт 200.
 
 - 2026-02-17: Composio ответил 500 на sync, ошибка: “This endpoint is no longer available. Please upgrade to v3 APIs.” Переключено на v3: `COMPOSIO_EXECUTE_PATH = /api/v3/tools/execute`, формат запроса изменён на `connected_account_id` + `arguments`. Добавлена расширенная обработка ошибок (возврат текста/JSON). Нужен **повторный deploy** и повторный вызов sync для получения новой ошибки/успеха.
+- 2026-02-18: **Соединения активны!** 🎉 Instagram sync теперь работает. Исправлены:
+  - Тулы: `INSTAGRAM_GET_IG_USER_MEDIA` → `INSTAGRAM_GET_USER_MEDIA`, `INSTAGRAM_GET_IG_MEDIA_INSIGHTS` → `INSTAGRAM_GET_POST_INSIGHTS`
+  - Метрики: `saves` vs `saved` (разные для user insights и post insights)
+  - Формат дат: Unix timestamps → ISO строки (YYYY-MM-DD) для INSTAGRAM_GET_USER_INSIGHTS
+  - IG_USER_ID обновлён на `34985356197729987` (правильный ID из connected account)
+  - POST /api/instagram/refresh теперь возвращает HTTP 200 с `{"ok": true, "result": {"dates": 0, "posts": 25}}`
+  - В таблицу instagram_post_metrics успешно вставлено 25 строк
+  - Проверены Composio connected accounts: Instagram (ca_TGVA67AbNO78, ACTIVE), Calendar (ca_2UnTItt_Dsp-), Google Sheets (ca_OOCCclWP2CiQ), entity_id = "ma-ko"
+  - Коммит: 06092e0 с сообщением "3"
