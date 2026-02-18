@@ -635,7 +635,6 @@
 
           <div class="today-card">
             <h4>Сегодня</h4>
-            <div class="big" id="todayName">—</div>
             <div class="today-list">
               <div>Главный фокус: обновить таблицу броней</div>
               <div>Проверить отклик на последние публикации</div>
@@ -657,7 +656,6 @@
       const radioDay = document.getElementById("radioDay");
       const radioMonth = document.getElementById("radioMonth");
       const radioWeekday = document.getElementById("radioWeekday");
-      const todayName = document.getElementById("todayName");
       const updatedAt = document.getElementById("updatedAt");
       const weekGrid = document.getElementById("weekGrid");
 
@@ -669,7 +667,6 @@
       radioDay.textContent = dayNumber;
       radioMonth.textContent = monthName;
       radioWeekday.textContent = dayName;
-      todayName.textContent = dayName.charAt(0).toUpperCase() + dayName.slice(1);
       updatedAt.textContent = now.toLocaleString(locale, { dateStyle: "short", timeStyle: "short" });
 
       const currentDay = now.getDay().toString();
