@@ -821,11 +821,12 @@
     function renderInstagramMetrics(data) {
       const { instagram } = data;
       const metrics = document.querySelectorAll(".panel.instagram .metric");
-      const spark = document.querySelectorAll(".panel.instagram .spark svg path");
+      const sparkContainers = document.querySelectorAll(".panel.instagram .spark");
 
       const monthSummary = instagram?.monthSummary;
       const postSummary = instagram?.postSummary || {};
       const summary = instagram?.summary || {};
+      const userMetrics = instagram?.userMetrics || [];
 
       const totalReach = summary?.total_reach ?? monthSummary?.total_reach ?? postSummary?.total_reach ?? null;
       const totalInteractions = summary?.total_interactions ?? monthSummary?.total_interactions ?? postSummary?.total_interactions ?? null;
@@ -877,14 +878,29 @@
       setText("igCommentsTotal", postSummary?.total_comments != null ? formatNumber(postSummary.total_comments) : "—");
       setText("igCommentsAvg", postSummary?.avg_comments != null ? `средние комментарии: ${formatNumber(postSummary.avg_comments)}` : "средние комментарии: —");
 
-      // Обновление спарков
-      spark.forEach((s, i) => {
-        const d = s.getAttribute("d");
-        if (i === 0) s.setAttribute("d", d.replace(/52/, totalReach > 100000 ? "52" : "32"));
-        if (i === 1) s.setAttribute("d", d.replace(/42/, totalInteractions > 50000 ? "42" : "22"));
-        if (i === 2) s.setAttribute("d", d.replace(/50/, (seats.left || 0) < 50 ? "50" : "30"));
-        if (i === 3) s.setAttribute("d", d.replace(/48/, (seats.prepaid || 0) > 50 ? "48" : "28"));
-      });
+      // Динамические графики
+      // 1. График охвата (из userMetrics)
+      const reachValues = userMetrics.map(m => m.reach).filter(v => v != null);
+      if (sparkContainers[0]) {
+        sparkContainers[0].innerHTML = generateSparkline(reachValues, { color: "#5AD0FF" });
+      }
+
+      // 2. График взаимодействий (из userMetrics)
+      const interactionsValues = userMetrics.map(m => m.total_interactions).filter(v => v != null);
+      if (sparkContainers[1]) {
+        sparkContainers[1].innerHTML = generateSparkline(interactionsValues, { color: "#F2C94C" });
+      }
+
+      // 3. Прогресс-бар мест осталось
+      if (sparkContainers[2]) {
+        const bookedPercent = seats.total > 0 ? seats.booked : 0;
+        sparkContainers[2].innerHTML = generateProgressBar(bookedPercent, seats.total || 300, { color: "#FF7AA2" });
+      }
+
+      // 4. Прогресс-бар забронировано с предоплатой
+      if (sparkContainers[3]) {
+        sparkContainers[3].innerHTML = generateProgressBar(seats.prepaid || 0, seats.booked || 1, { color: "#7CF2B5" });
+      }
     }
 
     // Рендеринг таблицы бронирований
@@ -997,7 +1013,138 @@
       return String(n);
     }
     function escapeHtml(str) {
-      return String(str || "").replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+      return String(str || "").replace(/[&<>"']/g, s => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' }[s]));
+    }
+
+    // Генерация SVG sparkline из массива значений
+    function generateSparkline(values, options = {}) {
+      const {
+        width = 160,
+        height = 64,
+        color = "#5AD0FF",
+        strokeWidth = 3,
+        fillGradient = true
+      } = options;
+
+      if (!values || values.length < 2) {
+        // Возвращаем пустой путь если нет данных
+        return `<path d="M4 ${height - 10} Q ${width/2} ${height - 30} ${width - 4} ${height - 20}" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" fill="none" opacity="0.3"/>`;
+      }
+
+      // Фильтруем null/undefined и нормализуем
+      const cleanValues = values.filter(v => v != null && !isNaN(v));
+      if (cleanValues.length < 2) {
+        return `<path d="M4 ${height - 10} Q ${width/2} ${height - 30} ${width - 4} ${height - 20}" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" fill="none" opacity="0.3"/>`;
+      }
+
+      const min = Math.min(...cleanValues);
+      const max = Math.max(...cleanValues);
+      const range = max - min || 1; // избегаем деления на 0
+
+      // Вычисляем точки с отступами
+      const padding = 4;
+      const graphWidth = width - padding * 2;
+      const graphHeight = height - padding * 2;
+      
+      const points = cleanValues.map((v, i) => {
+        const x = padding + (i / (cleanValues.length - 1)) * graphWidth;
+        const y = padding + graphHeight - ((v - min) / range) * graphHeight;
+        return { x, y };
+      });
+
+      // Строим сглаженный путь с bezier curves
+      let path = `M ${points[0].x} ${points[0].y}`;
+      
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const curr = points[i];
+        const cpX = (prev.x + curr.x) / 2;
+        path += ` Q ${prev.x + (cpX - prev.x) * 0.5} ${prev.y} ${cpX} ${(prev.y + curr.y) / 2}`;
+        path += ` Q ${cpX + (curr.x - cpX) * 0.5} ${curr.y} ${curr.x} ${curr.y}`;
+      }
+
+      // Градиент для заливки под графиком
+      const gradientId = `grad_${Math.random().toString(36).substr(2, 9)}`;
+      const fillPath = `${path} L ${points[points.length - 1].x} ${height - padding} L ${points[0].x} ${height - padding} Z`;
+
+      let svg = `<svg viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg">`;
+      
+      if (fillGradient) {
+        svg += `<defs>
+          <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="${color}" stop-opacity="0.05"/>
+          </linearGradient>
+        </defs>`;
+        svg += `<path d="${fillPath}" fill="url(#${gradientId})"/>`;
+      }
+      
+      svg += `<path d="${path}" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" fill="none"/>`;
+      svg += `</svg>`;
+
+      return svg;
+    }
+
+    // Генерация прогресс-бара вместо спарклайна для бронирований
+    function generateProgressBar(current, total, options = {}) {
+      const {
+        width = 160,
+        height = 64,
+        color = "#7CF2B5",
+        bgColor = "rgba(255,255,255,0.1)"
+      } = options;
+
+      const percent = total > 0 ? (current / total) * 100 : 0;
+      const barHeight = 8;
+      const barY = height - barHeight - 10;
+      const padding = 4;
+      const barWidth = width - padding * 2;
+
+      // Создаем точки для кривой над прогресс-баром (визуальный интерес)
+      const points = [];
+      const numPoints = 20;
+      for (let i = 0; i <= numPoints; i++) {
+        const x = padding + (i / numPoints) * barWidth;
+        const progress = (i / numPoints) * 100;
+        let y;
+        if (progress <= percent) {
+          y = barY - 20 - Math.sin((i / numPoints) * Math.PI * 2) * 10 - Math.random() * 5;
+        } else {
+          y = barY - 15 - Math.sin((i / numPoints) * Math.PI) * 5;
+        }
+        points.push({ x, y });
+      }
+
+      let path = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        path += ` L ${points[i].x} ${points[i].y}`;
+      }
+
+      const gradientId = `prog_${Math.random().toString(36).substr(2, 9)}`;
+
+      let svg = `<svg viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg">`;
+      svg += `<defs>
+        <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="${color}" stop-opacity="1"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity="0.6"/>
+        </linearGradient>
+      </defs>`;
+      
+      // Фоновый трек
+      svg += `<rect x="${padding}" y="${barY}" width="${barWidth}" height="${barHeight}" rx="4" fill="${bgColor}"/>`;
+      
+      // Заполненная часть
+      const filledWidth = (percent / 100) * barWidth;
+      if (filledWidth > 0) {
+        svg += `<rect x="${padding}" y="${barY}" width="${filledWidth}" height="${barHeight}" rx="4" fill="url(#${gradientId})"/>`;
+      }
+      
+      // Декоративная линия
+      svg += `<path d="${path}" stroke="${color}" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.4"/>`;
+      
+      svg += `</svg>`;
+
+      return svg;
     }
 
     // Загрузка данных при старте
