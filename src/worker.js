@@ -926,7 +926,8 @@ async function syncSheets(env) {
       const contactRaw = String(row[CONTACT_COL] || "").trim();
       if (!fio && !contactRaw) continue;
 
-      const prepaid = prepaidMap.get(i + 1) ? 1 : 0;
+      const prepayCell = row[PREPAY_COL];
+      const prepaid = prepaidMap.get(i + 1) || hasNonEmpty(prepayCell) ? 1 : 0;
       const { phone, parentName } = parseContact(contactRaw);
       const hash = await sha256(`${sheetName}|${i + 1}|${fio}|${contactRaw}`);
 
@@ -1244,6 +1245,13 @@ function hasCellValue(cell) {
     if ("boolValue" in userEntered) return userEntered.boolValue === true;
   }
   return false;
+}
+
+function hasNonEmpty(value) {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (typeof value === "number") return true;
+  return String(value).trim() !== "";
 }
 
 function findHeaderIndex(headers, needle) {
