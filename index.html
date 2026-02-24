@@ -815,13 +815,8 @@
       metrics[2].querySelector(".delta").textContent = "от охвата";
 
       // Сохранения
-      if (totalSaves != null && totalSaves > 0) {
-        metrics[3].querySelector(".value").textContent = formatNumber(totalSaves);
-        metrics[3].querySelector(".delta").textContent = "за 3 месяца";
-      } else {
-        metrics[3].querySelector(".value").textContent = "н/д";
-        metrics[3].querySelector(".delta").textContent = "нет данных от API";
-      }
+      metrics[3].querySelector(".value").textContent = totalSaves != null ? formatNumber(totalSaves) : "—";
+      metrics[3].querySelector(".delta").textContent = "за 3 месяца";
 
       const setText = (id, val) => {
         const el = document.getElementById(id);
@@ -849,11 +844,11 @@
       setText("igCommentsTotal", postSummary?.total_comments != null ? formatNumber(postSummary.total_comments) : "—");
       setText("igCommentsAvg", postSummary?.avg_comments != null ? `средние комментарии: ${formatNumber(postSummary.avg_comments)}` : "средние комментарии: —");
 
-      setText("igSavesTotal", postSummary?.total_saves > 0 ? formatNumber(postSummary.total_saves) : "н/д");
-      setText("igSavesAvg", postSummary?.avg_saves != null ? `средние сохранения: ${formatNumber(postSummary.avg_saves)}` : "средние сохранения: н/д");
+      setText("igSavesTotal", postSummary?.total_saves != null ? formatNumber(postSummary.total_saves) : "—");
+      setText("igSavesAvg", postSummary?.avg_saves != null ? `средние сохранения: ${formatNumber(postSummary.avg_saves)}` : "средние сохранения: —");
 
-      setText("igSharesTotal", postSummary?.total_shares > 0 ? formatNumber(postSummary.total_shares) : "н/д");
-      setText("igSharesAvg", postSummary?.avg_shares != null ? `средние репосты: ${formatNumber(postSummary.avg_shares)}` : "средние репосты: н/д");
+      setText("igSharesTotal", postSummary?.total_shares != null ? formatNumber(postSummary.total_shares) : "—");
+      setText("igSharesAvg", postSummary?.avg_shares != null ? `средние репосты: ${formatNumber(postSummary.avg_shares)}` : "средние репосты: —");
 
       // Обновление спарков
       spark.forEach((s, i) => {

@@ -207,13 +207,8 @@ const HTML_PAGE = `<!doctype html>
         metrics[2].querySelector(".delta").textContent = "от охвата";
 
         // Сохранения
-        if (totalSaves != null && totalSaves > 0) {
-          metrics[3].querySelector(".value").textContent = formatNumber(totalSaves);
-          metrics[3].querySelector(".delta").textContent = "за 3 месяца";
-        } else {
-          metrics[3].querySelector(".value").textContent = "н/д";
-          metrics[3].querySelector(".delta").textContent = "нет данных от API";
-        }
+        metrics[3].querySelector(".value").textContent = totalSaves != null ? formatNumber(totalSaves) : "—";
+        metrics[3].querySelector(".delta").textContent = "за 3 месяца";
 
         const setText = (id, val) => {
           const el = document.getElementById(id);
@@ -253,20 +248,20 @@ const HTML_PAGE = `<!doctype html>
             : "средние комментарии: —"
         );
 
-        setText("igSavesTotal", postSummary?.total_saves > 0 ? formatNumber(postSummary.total_saves) : "н/д");
+        setText("igSavesTotal", postSummary?.total_saves != null ? formatNumber(postSummary.total_saves) : "—");
         setText(
           "igSavesAvg",
           postSummary?.avg_saves != null
             ? "средние сохранения: " + formatNumber(postSummary.avg_saves)
-            : "средние сохранения: н/д"
+            : "средние сохранения: —"
         );
 
-        setText("igSharesTotal", postSummary?.total_shares > 0 ? formatNumber(postSummary.total_shares) : "н/д");
+        setText("igSharesTotal", postSummary?.total_shares != null ? formatNumber(postSummary.total_shares) : "—");
         setText(
           "igSharesAvg",
           postSummary?.avg_shares != null
             ? "средние репосты: " + formatNumber(postSummary.avg_shares)
-            : "средние репосты: н/д"
+            : "средние репосты: —"
         );
       }
       function renderBookingsTable(bookings){
@@ -809,10 +804,11 @@ async function syncInstagram(env) {
     const postInsights = await fetchComposio(
       env,
       env.COMPOSIO_CONN_IG,
-      "INSTAGRAM_GET_POST_INSIGHTS",
+      "INSTAGRAM_GET_IG_MEDIA_INSIGHTS",
       {
-        ig_post_id: item.id,
-        metric: ["reach", "likes", "comments", "saved", "shares"],
+        ig_media_id: item.id,
+        metric: ["reach", "saved", "shares", "total_interactions", "likes", "comments"],
+        period: "lifetime",
       }
     );
 
