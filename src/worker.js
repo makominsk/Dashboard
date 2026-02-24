@@ -792,7 +792,7 @@ async function syncInstagram(env) {
     {
       since: since_unix,
       until: until_unix,
-      fields: "id,timestamp,media_type",
+      fields: "id,timestamp,media_type,like_count,comments_count",
     }
   );
 
@@ -812,6 +812,10 @@ async function syncInstagram(env) {
     );
 
     const insightMap = normalizeMediaInsights(postInsights);
+    const likesFallback = extractNumber(item?.like_count);
+    const commentsFallback = extractNumber(item?.comments_count);
+    const likes = insightMap.likes ?? likesFallback ?? null;
+    const comments = insightMap.comments ?? commentsFallback ?? null;
     await env.DB.prepare(
       `INSERT INTO instagram_post_metrics (post_id, date, reach, likes, comments, saves, shares)
        VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -827,8 +831,8 @@ async function syncInstagram(env) {
         item.id,
         (item.timestamp || "").slice(0, 10),
         insightMap.reach ?? null,
-        insightMap.likes ?? null,
-        insightMap.comments ?? null,
+        likes,
+        comments,
         insightMap.saves ?? null,
         insightMap.shares ?? null
       )
