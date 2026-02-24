@@ -87,16 +87,14 @@ const HTML_PAGE = `<!doctype html>
           <div class="metrics">
             <div class="metric"><div class="label">Охват</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 52C18 44 30 20 44 22C58 24 66 46 80 44C94 42 110 18 124 18C138 18 150 36 156 30" stroke="#5AD0FF" stroke-width="3" stroke-linecap="round"/></svg></div></div>
             <div class="metric"><div class="label">Взаимодействия</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 42C18 34 28 30 44 34C60 38 66 50 80 48C94 46 106 22 124 22C142 22 152 40 156 36" stroke="#F2C94C" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="metric"><div class="label">ER</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 50C20 54 30 40 44 36C58 32 66 44 80 40C94 36 110 26 124 26C138 26 150 38 156 32" stroke="#FF7AA2" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="metric"><div class="label">Сохранения</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 48C18 40 28 24 44 24C60 24 66 42 80 40C94 38 110 26 124 26C138 26 150 34 156 28" stroke="#7CF2B5" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+            <div class="metric"><div class="label">Подписчики</div><div class="value" id="igFollowersInline">—</div><div class="delta" id="igFollowersDeltaInline">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 50C20 54 30 40 44 36C58 32 66 44 80 40C94 36 110 26 124 26C138 18 150 38 156 32" stroke="#FF7AA2" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+            <div class="metric"><div class="label">Посты (3м)</div><div class="value" id="igPostsInline">—</div><div class="delta" id="igAvgReachInline">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 48C18 40 28 24 44 24C60 24 66 42 80 40C94 38 110 26 124 26C138 18 150 34 156 28" stroke="#7CF2B5" stroke-width="3" stroke-linecap="round"/></svg></div></div>
           </div>
           <div class="ig-details">
             <div class="ig-item"><div class="ig-key">Подписчики</div><div class="ig-val" id="igFollowers">—</div><div class="ig-sub" id="igFollowersDelta">—</div></div>
-            <div class="ig-item"><div class="ig-key">Постов (30д)</div><div class="ig-val" id="igPostsCount">—</div><div class="ig-sub" id="igAvgReach">—</div></div>
-            <div class="ig-item"><div class="ig-key">Лайки (30д)</div><div class="ig-val" id="igLikesTotal">—</div><div class="ig-sub" id="igLikesAvg">—</div></div>
-            <div class="ig-item"><div class="ig-key">Комментарии (30д)</div><div class="ig-val" id="igCommentsTotal">—</div><div class="ig-sub" id="igCommentsAvg">—</div></div>
-            <div class="ig-item"><div class="ig-key">Сохранения (30д)</div><div class="ig-val" id="igSavesTotal">—</div><div class="ig-sub" id="igSavesAvg">—</div></div>
-            <div class="ig-item"><div class="ig-key">Репосты (30д)</div><div class="ig-val" id="igSharesTotal">—</div><div class="ig-sub" id="igSharesAvg">—</div></div>
+            <div class="ig-item"><div class="ig-key">Постов (3м)</div><div class="ig-val" id="igPostsCount">—</div><div class="ig-sub" id="igAvgReach">—</div></div>
+            <div class="ig-item"><div class="ig-key">Лайки (3м)</div><div class="ig-val" id="igLikesTotal">—</div><div class="ig-sub" id="igLikesAvg">—</div></div>
+            <div class="ig-item"><div class="ig-key">Комментарии (3м)</div><div class="ig-val" id="igCommentsTotal">—</div><div class="ig-sub" id="igCommentsAvg">—</div></div>
           </div>
         </article>
         <article class="panel bookings fade-in delay-1">
@@ -177,7 +175,6 @@ const HTML_PAGE = `<!doctype html>
         return res.json();
       }
       function formatNumber(n){if(n>=1e6)return(n/1e6).toFixed(1)+"M";if(n>=1000)return(n/1000).toFixed(1)+"K";return String(n)}
-      function formatPercent(n){if(n==null||Number.isNaN(n))return "—";return n.toFixed(1)+"%"}
       function escapeHtml(str){return String(str||"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]))}
 
       function renderInstagramMetrics(data){
@@ -191,8 +188,6 @@ const HTML_PAGE = `<!doctype html>
 
         const totalReach = summary?.total_reach ?? monthSummary?.total_reach ?? postSummary?.total_reach ?? null;
         const totalInteractions = summary?.total_interactions ?? monthSummary?.total_interactions ?? postSummary?.total_interactions ?? null;
-        const totalSaves = summary?.total_saves ?? monthSummary?.total_saves ?? postSummary?.total_saves ?? null;
-        const engagementRate = summary?.engagement_rate ?? null;
 
         // Охват
         metrics[0].querySelector(".value").textContent = totalReach != null ? formatNumber(totalReach) : "—";
@@ -202,13 +197,17 @@ const HTML_PAGE = `<!doctype html>
         metrics[1].querySelector(".value").textContent = totalInteractions != null ? formatNumber(totalInteractions) : "—";
         metrics[1].querySelector(".delta").textContent = "за 3 месяца";
 
-        // ER
-        metrics[2].querySelector(".value").textContent = engagementRate != null ? formatPercent(engagementRate) : "—";
-        metrics[2].querySelector(".delta").textContent = "от охвата";
+        // Подписчики
+        metrics[2].querySelector(".value").textContent = summary?.followers_total != null ? formatNumber(summary.followers_total) : "—";
+        metrics[2].querySelector(".delta").textContent =
+          summary?.followers_delta_month != null
+            ? "Δ3м: " + (summary.followers_delta_month >= 0 ? "+" : "") + formatNumber(summary.followers_delta_month)
+            : "Δ3м: —";
 
-        // Сохранения
-        metrics[3].querySelector(".value").textContent = totalSaves != null ? formatNumber(totalSaves) : "—";
-        metrics[3].querySelector(".delta").textContent = "за 3 месяца";
+        // Посты
+        metrics[3].querySelector(".value").textContent = summary?.posts_count != null ? formatNumber(summary.posts_count) : "—";
+        metrics[3].querySelector(".delta").textContent =
+          summary?.avg_reach != null ? "ср. охват: " + formatNumber(summary.avg_reach) : "ср. охват: —";
 
         const setText = (id, val) => {
           const el = document.getElementById(id);
@@ -248,20 +247,21 @@ const HTML_PAGE = `<!doctype html>
             : "средние комментарии: —"
         );
 
-        setText("igSavesTotal", postSummary?.total_saves != null ? formatNumber(postSummary.total_saves) : "—");
+        setText("igFollowersInline", summary?.followers_total != null ? formatNumber(summary.followers_total) : "—");
         setText(
-          "igSavesAvg",
-          postSummary?.avg_saves != null
-            ? "средние сохранения: " + formatNumber(postSummary.avg_saves)
-            : "средние сохранения: —"
+          "igFollowersDeltaInline",
+          summary?.followers_delta_month != null
+            ? "Δ3м: " + (summary.followers_delta_month >= 0 ? "+" : "") + formatNumber(summary.followers_delta_month)
+            : "Δ3м: —"
         );
-
-        setText("igSharesTotal", postSummary?.total_shares != null ? formatNumber(postSummary.total_shares) : "—");
+        setText("igPostsInline", summary?.posts_count != null ? formatNumber(summary.posts_count) : "—");
         setText(
-          "igSharesAvg",
-          postSummary?.avg_shares != null
-            ? "средние репосты: " + formatNumber(postSummary.avg_shares)
-            : "средние репосты: —"
+          "igAvgReachInline",
+          summary?.avg_reach != null
+            ? "ср. охват: " +
+                formatNumber(summary.avg_reach) +
+                (postSummary?.best_reach != null ? " · пик: " + formatNumber(postSummary.best_reach) : "")
+            : "ср. охват: —"
         );
       }
       function renderBookingsTable(bookings){
