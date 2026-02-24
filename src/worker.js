@@ -1227,7 +1227,8 @@ function isGreenCell(cell) {
   const r = color.red ?? 0;
   const g = color.green ?? 0;
   const b = color.blue ?? 0;
-  return g >= 0.5 && g >= r + 0.2 && g >= b + 0.2;
+  // Более мягкий критерий "зелёного": зелёный доминирует и достаточно яркий.
+  return g >= 0.45 && g >= r && g >= b && (g - Math.max(r, b)) >= 0.05;
 }
 
 function findHeaderIndex(headers, needle) {
