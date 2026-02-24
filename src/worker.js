@@ -917,6 +917,7 @@ async function syncSheets(env) {
     }
 
     const prepaidMap = await fetchPrepaidMap(env, sheetName, sheetIdMap.get(sheetName));
+    const prepaidValueMap = await fetchPrepaidValuesMap(env, sheetName);
 
     for (let i = dataStartRow; i < values.length; i += 1) {
       const row = values[i];
@@ -927,7 +928,7 @@ async function syncSheets(env) {
       if (!fio && !contactRaw) continue;
 
       const prepayCell = row[PREPAY_COL];
-      const prepaid = prepaidMap.get(i + 1) || hasNonEmpty(prepayCell) ? 1 : 0;
+      const prepaid = prepaidMap.get(i + 1) || prepaidValueMap.get(i + 1) || hasNonEmpty(prepayCell) ? 1 : 0;
       const { phone, parentName } = parseContact(contactRaw);
       const hash = await sha256(`${sheetName}|${i + 1}|${fio}|${contactRaw}`);
 
@@ -1006,6 +1007,31 @@ async function fetchPrepaidMap(env, sheetName, sheetId) {
     rows.forEach((row, idx) => {
       const cell = row?.values?.[0];
       if (isGreenCell(cell) || hasCellValue(cell)) {
+        map.set(idx + 9, true);
+      }
+    });
+    return map;
+  } catch {
+    return new Map();
+  }
+}
+
+async function fetchPrepaidValuesMap(env, sheetName) {
+  try {
+    const res = await fetchComposio(
+      env,
+      env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
+      "GOOGLESHEETS_VALUES_GET",
+      {
+        spreadsheet_id: env.SHEETS_ID,
+        range: `${sheetName}!K9:K58`,
+      }
+    );
+    const values = res?.data?.values || res?.values || [];
+    const map = new Map();
+    values.forEach((row, idx) => {
+      const val = row?.[0];
+      if (hasNonEmpty(val)) {
         map.set(idx + 9, true);
       }
     });
