@@ -207,8 +207,13 @@ const HTML_PAGE = `<!doctype html>
         metrics[2].querySelector(".delta").textContent = "от охвата";
 
         // Сохранения
-        metrics[3].querySelector(".value").textContent = totalSaves != null ? formatNumber(totalSaves) : "—";
-        metrics[3].querySelector(".delta").textContent = "за 3 месяца";
+        if (totalSaves != null && totalSaves > 0) {
+          metrics[3].querySelector(".value").textContent = formatNumber(totalSaves);
+          metrics[3].querySelector(".delta").textContent = "за 3 месяца";
+        } else {
+          metrics[3].querySelector(".value").textContent = "н/д";
+          metrics[3].querySelector(".delta").textContent = "нет данных от API";
+        }
 
         const setText = (id, val) => {
           const el = document.getElementById(id);
@@ -248,20 +253,20 @@ const HTML_PAGE = `<!doctype html>
             : "средние комментарии: —"
         );
 
-        setText("igSavesTotal", postSummary?.total_saves != null ? formatNumber(postSummary.total_saves) : "—");
+        setText("igSavesTotal", postSummary?.total_saves > 0 ? formatNumber(postSummary.total_saves) : "н/д");
         setText(
           "igSavesAvg",
           postSummary?.avg_saves != null
             ? "средние сохранения: " + formatNumber(postSummary.avg_saves)
-            : "средние сохранения: —"
+            : "средние сохранения: н/д"
         );
 
-        setText("igSharesTotal", postSummary?.total_shares != null ? formatNumber(postSummary.total_shares) : "—");
+        setText("igSharesTotal", postSummary?.total_shares > 0 ? formatNumber(postSummary.total_shares) : "н/д");
         setText(
           "igSharesAvg",
           postSummary?.avg_shares != null
             ? "средние репосты: " + formatNumber(postSummary.avg_shares)
-            : "средние репосты: —"
+            : "средние репосты: н/д"
         );
       }
       function renderBookingsTable(bookings){
@@ -616,15 +621,15 @@ async function getDashboard(env) {
   const postSummary = await env.DB.prepare(
     `SELECT 
       COUNT(*) as posts_count,
-      SUM(reach) as total_reach,
+      COALESCE(SUM(reach), 0) as total_reach,
       AVG(reach) as avg_reach,
-      SUM(likes) as total_likes,
+      COALESCE(SUM(likes), 0) as total_likes,
       AVG(likes) as avg_likes,
-      SUM(comments) as total_comments,
+      COALESCE(SUM(comments), 0) as total_comments,
       AVG(comments) as avg_comments,
-      SUM(saves) as total_saves,
+      COALESCE(SUM(saves), 0) as total_saves,
       AVG(saves) as avg_saves,
-      SUM(shares) as total_shares,
+      COALESCE(SUM(shares), 0) as total_shares,
       AVG(shares) as avg_shares,
       MAX(reach) as best_reach
     FROM instagram_post_metrics 
@@ -634,10 +639,10 @@ async function getDashboard(env) {
   const postData = postSummary.results?.[0] || {};
   
   // Вычисляем общее взаимодействие из постов
-  const totalPostInteractions = 
-    (postData.total_likes || 0) + 
-    (postData.total_comments || 0) + 
-    (postData.total_saves || 0) + 
+  const totalPostInteractions =
+    (postData.total_likes || 0) +
+    (postData.total_comments || 0) +
+    (postData.total_saves || 0) +
     (postData.total_shares || 0);
 
   const latestUser =
