@@ -718,7 +718,7 @@
       return res.json();
     }
 
-    // Рендеринг метрик Instagram (за 30 дней)
+    // Рендеринг метрик Instagram (за 30 дней) - гибридный подход
     function renderInstagramMetrics(data) {
       const { instagram } = data;
       const metrics = document.querySelectorAll(".panel.instagram .metric");
@@ -727,64 +727,67 @@
       const monthSummary = instagram?.monthSummary;
       const postSummary = instagram?.postSummary || {};
       const lastUser = instagram.userMetrics?.[instagram.userMetrics.length - 1];
+      const followers = lastUser?.followers_total ?? instagram.followers_total ?? null;
       
-      // Определяем источник данных: если есть monthSummary - используем его, иначе postSummary
-      const usePostData = !monthSummary?.total_reach && postSummary?.posts_count > 0;
-      
-      // Показы (total_reach за 30 дней)
-      const totalReach = usePostData 
-        ? (postSummary?.total_reach ?? null)
-        : (monthSummary?.total_reach ?? null);
+      // Показы/Охват - приоритет monthSummary
+      const totalReach = monthSummary?.total_reach ?? postSummary?.total_reach ?? null;
       const reachEl = metrics[0].querySelector(".value");
       const reachDelta = metrics[0].querySelector(".delta");
       reachEl.textContent = totalReach != null ? formatNumber(totalReach) : "—";
-      if (usePostData && postSummary?.posts_count) {
-        reachDelta.textContent = `${postSummary.posts_count} постов`;
-      } else if (monthSummary?.days_count) {
+      if (monthSummary?.days_count) {
         reachDelta.textContent = `за ${monthSummary.days_count} дней`;
+      } else if (postSummary?.posts_count) {
+        reachDelta.textContent = `${postSummary.posts_count} постов`;
       } else {
         reachDelta.textContent = "Нет данных";
       }
 
-      // Взаимодействия (total_interactions за 30 дней)
-      const totalInteractions = usePostData
-        ? (postSummary?.total_interactions ?? null)
-        : (monthSummary?.total_interactions ?? null);
+      // Взаимодействия - приоритет postSummary (лайки + комментарии)
+      const totalInteractions = postSummary?.total_interactions ?? monthSummary?.total_interactions ?? null;
       const interactionsEl = metrics[1].querySelector(".value");
       const interactionsDelta = metrics[1].querySelector(".delta");
-      interactionsEl.textContent = totalInteractions != null ? formatNumber(totalInteractions) : "—";
-      interactionsDelta.textContent = usePostData ? "лайки + комменты + сохранения" : (totalInteractions != null ? "взаимодействия за 30 дней" : "Нет данных");
+      interactionsEl.textContent = totalInteractions != null && totalInteractions > 0 ? formatNumber(totalInteractions) : (followers != null ? formatNumber(followers) : "—");
+      if (postSummary?.total_likes != null && postSummary.total_likes > 0) {
+        interactionsDelta.textContent = `${formatNumber(postSummary.total_likes)} лайков за 30 дней`;
+      } else if (totalInteractions != null && totalInteractions > 0) {
+        interactionsDelta.textContent = "взаимодействия за 30 дней";
+      } else if (followers != null) {
+        interactionsDelta.textContent = "подписчиков";
+      } else {
+        interactionsDelta.textContent = "Нет данных";
+      }
 
-      // Вовлечённость (engagement) - среднее от лайков
+      // Средние лайки на пост или подписчики
       const avgLikes = postSummary?.avg_likes ?? null;
       const engagementEl = metrics[2].querySelector(".value");
       const engagementDelta = metrics[2].querySelector(".delta");
-      if (usePostData && avgLikes != null) {
+      if (avgLikes != null && avgLikes > 0) {
         engagementEl.textContent = formatNumber(avgLikes);
-        engagementDelta.textContent = "среднее лайков на пост";
+        engagementDelta.textContent = "средние лайки на пост";
+      } else if (followers != null) {
+        engagementEl.textContent = formatNumber(followers);
+        engagementDelta.textContent = "подписчиков";
       } else {
-        const followers = lastUser?.followers_total ?? instagram.followers_total ?? null;
-        const engagement = (totalInteractions && followers) ? ((totalInteractions / followers) * 100).toFixed(1) : null;
-        engagementEl.textContent = engagement != null ? `${engagement}%` : "—";
-        engagementDelta.textContent = followers != null ? `подписчиков: ${formatNumber(followers)}` : "Нет данных";
+        engagementEl.textContent = "—";
+        engagementDelta.textContent = "Нет данных";
       }
 
-      // Сохранения (total_saves за 30 дней)
-      const totalSaves = usePostData
-        ? (postSummary?.total_saves ?? null)
-        : (monthSummary?.total_saves ?? null);
+      // Сохранения или лучший охват
+      const totalSaves = postSummary?.total_saves ?? monthSummary?.total_saves ?? null;
       const savesEl = metrics[3].querySelector(".value");
       const savesDelta = metrics[3].querySelector(".delta");
-      savesEl.textContent = totalSaves != null ? formatNumber(totalSaves) : "—";
-      if (usePostData && postSummary?.best_reach) {
+      savesEl.textContent = totalSaves != null && totalSaves > 0 ? formatNumber(totalSaves) : (postSummary?.avg_comments != null && postSummary.avg_comments > 0 ? formatNumber(postSummary.avg_comments) : "—");
+      if (postSummary?.best_reach != null && postSummary.best_reach > 0) {
         savesDelta.textContent = `лучший охват: ${formatNumber(postSummary.best_reach)}`;
-      } else if (usePostData && postSummary?.posts_count) {
-        savesDelta.textContent = `${postSummary.posts_count} постов`;
+      } else if (totalSaves != null && totalSaves > 0) {
+        savesDelta.textContent = "сохранения за 30 дней";
+      } else if (postSummary?.avg_comments != null && postSummary.avg_comments > 0) {
+        savesDelta.textContent = "средние комментарии на пост";
       } else {
-        savesDelta.textContent = totalSaves != null ? "сохранения за 30 дней" : "Нет данных";
+        savesDelta.textContent = "Нет данных";
       }
 
-      // Обновление спарков (простые заглушки)
+      // Обновление спарков
       spark.forEach((s, i) => {
         const d = s.getAttribute("d");
         if (i === 0) s.setAttribute("d", d.replace(/52/, totalReach > 100000 ? "52" : "32"));

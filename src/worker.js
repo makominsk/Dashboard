@@ -169,35 +169,60 @@ const HTML_PAGE = `<!doctype html>
       function renderInstagramMetrics(data){
         const ig = data.instagram;
         const metrics = document.querySelectorAll(".panel.instagram .metric");
-        const last = ig.userMetrics?.[ig.userMetrics.length - 1];
-        if (!last) {
-          metrics.forEach(m => {
-            m.querySelector(".value").textContent = "—";
-            m.querySelector(".delta").textContent = "Нет данных";
-          });
-          return;
+        const monthSummary = ig?.monthSummary;
+        const postSummary = ig?.postSummary || {};
+        const lastUser = ig.userMetrics?.[ig.userMetrics.length - 1];
+        const followers = lastUser?.followers_total ?? ig.followers_total ?? null;
+
+        // Показы/Охват - приоритет monthSummary
+        const totalReach = monthSummary?.total_reach ?? postSummary?.total_reach ?? null;
+        metrics[0].querySelector(".value").textContent = totalReach != null ? formatNumber(totalReach) : "—";
+        if (monthSummary?.days_count) {
+          metrics[0].querySelector(".delta").textContent = "за " + monthSummary.days_count + " дней";
+        } else if (postSummary?.posts_count) {
+          metrics[0].querySelector(".delta").textContent = postSummary.posts_count + " постов";
+        } else {
+          metrics[0].querySelector(".delta").textContent = "Нет данных";
         }
 
-        // Показы (reach)
-        const reach = last?.reach ?? null;
-        metrics[0].querySelector(".value").textContent = reach != null ? formatNumber(reach) : "—";
-        metrics[0].querySelector(".delta").textContent = reach != null ? "охват за день" : "Нет данных";
+        // Взаимодействия - приоритет postSummary, иначе показываем подписчиков
+        const totalInteractions = postSummary?.total_interactions ?? monthSummary?.total_interactions ?? null;
+        metrics[1].querySelector(".value").textContent = (totalInteractions != null && totalInteractions > 0) ? formatNumber(totalInteractions) : (followers != null ? formatNumber(followers) : "—");
+        if (postSummary?.total_likes != null && postSummary.total_likes > 0) {
+          metrics[1].querySelector(".delta").textContent = formatNumber(postSummary.total_likes) + " лайков за 30 дней";
+        } else if (totalInteractions != null && totalInteractions > 0) {
+          metrics[1].querySelector(".delta").textContent = "взаимодействия за 30 дней";
+        } else if (followers != null) {
+          metrics[1].querySelector(".delta").textContent = "подписчиков";
+        } else {
+          metrics[1].querySelector(".delta").textContent = "Нет данных";
+        }
 
-        // Охват (total_interactions)
-        const interactions = last?.total_interactions ?? null;
-        metrics[1].querySelector(".value").textContent = interactions != null ? formatNumber(interactions) : "—";
-        metrics[1].querySelector(".delta").textContent = interactions != null ? "взаимодействия" : "Нет данных";
+        // Средние лайки или подписчики
+        const avgLikes = postSummary?.avg_likes ?? null;
+        if (avgLikes != null && avgLikes > 0) {
+          metrics[2].querySelector(".value").textContent = formatNumber(avgLikes);
+          metrics[2].querySelector(".delta").textContent = "средние лайки на пост";
+        } else if (followers != null) {
+          metrics[2].querySelector(".value").textContent = formatNumber(followers);
+          metrics[2].querySelector(".delta").textContent = "подписчиков";
+        } else {
+          metrics[2].querySelector(".value").textContent = "—";
+          metrics[2].querySelector(".delta").textContent = "Нет данных";
+        }
 
-        // Вовлечённость (engagement)
-        const followers = last?.followers_total ?? ig.followers_total ?? null;
-        const engagement = (interactions && followers) ? ((interactions / followers) * 100).toFixed(1) : null;
-        metrics[2].querySelector(".value").textContent = engagement != null ? (engagement + "%") : "—";
-        metrics[2].querySelector(".delta").textContent = followers != null ? ("подписчиков: " + formatNumber(followers)) : "Нет данных";
-
-        // Сохранения (saves)
-        const saves = last?.saves ?? null;
-        metrics[3].querySelector(".value").textContent = saves != null ? formatNumber(saves) : "—";
-        metrics[3].querySelector(".delta").textContent = saves != null ? "сохранения" : "Нет данных";
+        // Сохранения или лучший охват
+        const totalSaves = postSummary?.total_saves ?? monthSummary?.total_saves ?? null;
+        metrics[3].querySelector(".value").textContent = (totalSaves != null && totalSaves > 0) ? formatNumber(totalSaves) : (postSummary?.avg_comments != null && postSummary.avg_comments > 0 ? formatNumber(postSummary.avg_comments) : "—");
+        if (postSummary?.best_reach != null && postSummary.best_reach > 0) {
+          metrics[3].querySelector(".delta").textContent = "лучший охват: " + formatNumber(postSummary.best_reach);
+        } else if (totalSaves != null && totalSaves > 0) {
+          metrics[3].querySelector(".delta").textContent = "сохранения за 30 дней";
+        } else if (postSummary?.avg_comments != null && postSummary.avg_comments > 0) {
+          metrics[3].querySelector(".delta").textContent = "средние комментарии на пост";
+        } else {
+          metrics[3].querySelector(".delta").textContent = "Нет данных";
+        }
       }
       function renderBookingsTable(bookings){
         const tbody=document.querySelector(".panel.bookings tbody");
