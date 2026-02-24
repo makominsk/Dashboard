@@ -87,8 +87,8 @@ const HTML_PAGE = `<!doctype html>
           <div class="metrics">
             <div class="metric"><div class="label">Охват</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 52C18 44 30 20 44 22C58 24 66 46 80 44C94 42 110 18 124 18C138 18 150 36 156 30" stroke="#5AD0FF" stroke-width="3" stroke-linecap="round"/></svg></div></div>
             <div class="metric"><div class="label">Взаимодействия</div><div class="value">—</div><div class="delta">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 42C18 34 28 30 44 34C60 38 66 50 80 48C94 46 106 22 124 22C142 22 152 40 156 36" stroke="#F2C94C" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="metric"><div class="label">Подписчики</div><div class="value" id="igFollowersInline">—</div><div class="delta" id="igFollowersDeltaInline">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 50C20 54 30 40 44 36C58 32 66 44 80 40C94 36 110 26 124 26C138 18 150 38 156 32" stroke="#FF7AA2" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="metric"><div class="label">Посты (3м)</div><div class="value" id="igPostsInline">—</div><div class="delta" id="igAvgReachInline">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 48C18 40 28 24 44 24C60 24 66 42 80 40C94 38 110 26 124 26C138 18 150 34 156 28" stroke="#7CF2B5" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+            <div class="metric"><div class="label">Мест всего</div><div class="value" id="seatsTotal">—</div><div class="delta" id="seatsLeft">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 50C20 54 30 40 44 36C58 32 66 44 80 40C94 36 110 26 124 26C138 18 150 38 156 32" stroke="#FF7AA2" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+            <div class="metric"><div class="label">Забронировано</div><div class="value" id="bookedTotal">—</div><div class="delta" id="prepaidTotal">—</div><div class="spark"><svg viewBox="0 0 160 64" fill="none"><path d="M4 48C18 40 28 24 44 24C60 24 66 42 80 40C94 38 110 26 124 26C138 18 150 34 156 28" stroke="#7CF2B5" stroke-width="3" stroke-linecap="round"/></svg></div></div>
           </div>
           <div class="ig-details">
             <div class="ig-item"><div class="ig-key">Подписчики</div><div class="ig-val" id="igFollowers">—</div><div class="ig-sub" id="igFollowersDelta">—</div></div>
@@ -197,17 +197,15 @@ const HTML_PAGE = `<!doctype html>
         metrics[1].querySelector(".value").textContent = totalInteractions != null ? formatNumber(totalInteractions) : "—";
         metrics[1].querySelector(".delta").textContent = "за 3 месяца";
 
-        // Подписчики
-        metrics[2].querySelector(".value").textContent = summary?.followers_total != null ? formatNumber(summary.followers_total) : "—";
-        metrics[2].querySelector(".delta").textContent =
-          summary?.followers_delta_month != null
-            ? "Δ3м: " + (summary.followers_delta_month >= 0 ? "+" : "") + formatNumber(summary.followers_delta_month)
-            : "Δ3м: —";
+        const seats = data.bookingsSummary || {};
 
-        // Посты
-        metrics[3].querySelector(".value").textContent = summary?.posts_count != null ? formatNumber(summary.posts_count) : "—";
-        metrics[3].querySelector(".delta").textContent =
-          summary?.avg_reach != null ? "ср. охват: " + formatNumber(summary.avg_reach) : "ср. охват: —";
+        // Места
+        metrics[2].querySelector(".value").textContent = seats.total != null ? String(seats.total) : "—";
+        metrics[2].querySelector(".delta").textContent = seats.left != null ? "осталось: " + seats.left : "осталось: —";
+
+        // Бронирования
+        metrics[3].querySelector(".value").textContent = seats.booked != null ? String(seats.booked) : "—";
+        metrics[3].querySelector(".delta").textContent = seats.prepaid != null ? "предоплата: " + seats.prepaid : "предоплата: —";
 
         const setText = (id, val) => {
           const el = document.getElementById(id);
@@ -247,22 +245,10 @@ const HTML_PAGE = `<!doctype html>
             : "средние комментарии: —"
         );
 
-        setText("igFollowersInline", summary?.followers_total != null ? formatNumber(summary.followers_total) : "—");
-        setText(
-          "igFollowersDeltaInline",
-          summary?.followers_delta_month != null
-            ? "Δ3м: " + (summary.followers_delta_month >= 0 ? "+" : "") + formatNumber(summary.followers_delta_month)
-            : "Δ3м: —"
-        );
-        setText("igPostsInline", summary?.posts_count != null ? formatNumber(summary.posts_count) : "—");
-        setText(
-          "igAvgReachInline",
-          summary?.avg_reach != null
-            ? "ср. охват: " +
-                formatNumber(summary.avg_reach) +
-                (postSummary?.best_reach != null ? " · пик: " + formatNumber(postSummary.best_reach) : "")
-            : "ср. охват: —"
-        );
+        setText("seatsTotal", seats.total != null ? String(seats.total) : "—");
+        setText("seatsLeft", seats.left != null ? "осталось: " + seats.left : "осталось: —");
+        setText("bookedTotal", seats.booked != null ? String(seats.booked) : "—");
+        setText("prepaidTotal", seats.prepaid != null ? "предоплата: " + seats.prepaid : "предоплата: —");
       }
       function renderBookingsTable(bookings){
         const tbody=document.querySelector(".panel.bookings tbody");
@@ -605,6 +591,31 @@ async function getDashboard(env) {
     "SELECT * FROM bookings_raw WHERE updated_at >= ? ORDER BY updated_at ASC LIMIT 50"
   ).bind(twoDaysAgo).all();
 
+  // Сводка бронирований: считаем только строки 9-58, где есть запись в колонке B (fio)
+  const bookingsSummaryRaw = await env.DB.prepare(
+    `WITH latest AS (
+      SELECT sheet_name, row_index, MAX(updated_at) as max_updated
+      FROM bookings_raw
+      GROUP BY sheet_name, row_index
+    ),
+    rows AS (
+      SELECT b.sheet_name, b.row_index, b.fio, b.prepaid
+      FROM bookings_raw b
+      JOIN latest l
+        ON b.sheet_name = l.sheet_name
+       AND b.row_index = l.row_index
+       AND b.updated_at = l.max_updated
+    )
+    SELECT
+      SUM(CASE WHEN row_index BETWEEN 9 AND 58 AND fio IS NOT NULL AND TRIM(fio) <> '' THEN 1 ELSE 0 END) as booked,
+      SUM(CASE WHEN row_index BETWEEN 9 AND 58 AND fio IS NOT NULL AND TRIM(fio) <> '' AND prepaid = 1 THEN 1 ELSE 0 END) as prepaid
+    FROM rows`
+  ).all();
+  const bookedCount = bookingsSummaryRaw.results?.[0]?.booked || 0;
+  const prepaidCount = bookingsSummaryRaw.results?.[0]?.prepaid || 0;
+  const totalSeats = 300;
+  const seatsLeft = Math.max(0, totalSeats - bookedCount);
+
   // Показываем события от сегодня вперёд
   const calendar = await env.DB.prepare(
     "SELECT * FROM calendar_events WHERE start_time >= ? ORDER BY start_time ASC"
@@ -703,6 +714,12 @@ async function getDashboard(env) {
       })(),
       userMetrics: userMetrics.results || [],
       postMetrics: postMetrics.results || [],
+    },
+    bookingsSummary: {
+      total: totalSeats,
+      booked: bookedCount,
+      prepaid: prepaidCount,
+      left: seatsLeft,
     },
     bookings: bookings.results || [],
     calendar: calendar.results || [],
@@ -861,6 +878,8 @@ async function syncSheets(env) {
   const maxRows = Number(env.SHEETS_MAX_ROWS || 2000);
   let inserted = 0;
 
+  const sheetIdMap = await getSheetIdMap(env);
+
   for (const sheetName of sheetNames) {
     const range = `${sheetName}!A1:Z${maxRows}`;
     const valuesResponse = await fetchComposio(
@@ -881,9 +900,11 @@ async function syncSheets(env) {
     // Структура таблицы фиксированная:
     // Колонка B (индекс 1) = ФИО ребёнка
     // Колонка H (индекс 7) = КОНТАКТ (имя родителя + телефон)
+    // Колонка K (индекс 10) = Предоплата (зелёная отметка)
     // Данные начинаются с первой строки где колонка A содержит число (порядковый номер)
     const FIO_COL = 1;      // колонка B
     const CONTACT_COL = 7;  // колонка H
+    const PREPAY_COL = 10;  // колонка K
 
     // Найдём первую строку с данными (колонка A = число)
     let dataStartRow = 8; // по умолчанию строка 9 (индекс 8)
@@ -895,6 +916,8 @@ async function syncSheets(env) {
       }
     }
 
+    const prepaidMap = await fetchPrepaidMap(env, sheetName, sheetIdMap.get(sheetName));
+
     for (let i = dataStartRow; i < values.length; i += 1) {
       const row = values[i];
       if (!row || (!row[FIO_COL] && !row[CONTACT_COL])) continue;
@@ -903,20 +926,22 @@ async function syncSheets(env) {
       const contactRaw = String(row[CONTACT_COL] || "").trim();
       if (!fio && !contactRaw) continue;
 
+      const prepaid = prepaidMap.get(i + 1) ? 1 : 0;
       const { phone, parentName } = parseContact(contactRaw);
       const hash = await sha256(`${sheetName}|${i + 1}|${fio}|${contactRaw}`);
 
       const result = await env.DB.prepare(
-        `INSERT INTO bookings_raw (sheet_name, row_index, fio, contact_raw, phone, parent_name, hash)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO bookings_raw (sheet_name, row_index, fio, contact_raw, phone, parent_name, hash, prepaid)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(hash) DO UPDATE SET
            fio=excluded.fio,
            contact_raw=excluded.contact_raw,
            phone=excluded.phone,
            parent_name=excluded.parent_name,
+           prepaid=excluded.prepaid,
            updated_at=datetime('now')`
       )
-        .bind(sheetName, i + 1, fio, contactRaw, phone, parentName, hash)
+        .bind(sheetName, i + 1, fio, contactRaw, phone, parentName, hash, prepaid)
         .run();
 
       if (result.meta?.changes > 0) inserted += 1;
@@ -925,6 +950,68 @@ async function syncSheets(env) {
 
   await env.KV.put("last_sync_sheets", new Date().toISOString());
   return { inserted };
+}
+
+async function getSheetIdMap(env) {
+  try {
+    const info = await fetchComposio(
+      env,
+      env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
+      "GOOGLESHEETS_GET_SPREADSHEET_INFO",
+      { spreadsheet_id: env.SHEETS_ID }
+    );
+    const sheets = info?.data?.sheets || info?.sheets || [];
+    const map = new Map();
+    for (const sheet of sheets) {
+      const title = sheet?.properties?.title;
+      const id = sheet?.properties?.sheetId;
+      if (title && id != null) {
+        map.set(title, id);
+      }
+    }
+    return map;
+  } catch {
+    return new Map();
+  }
+}
+
+async function fetchPrepaidMap(env, sheetName, sheetId) {
+  if (!sheetId) return new Map();
+  try {
+    const res = await fetchComposio(
+      env,
+      env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
+      "GOOGLESHEETS_GET_SPREADSHEET_BY_DATA_FILTER",
+      {
+        spreadsheetId: env.SHEETS_ID,
+        dataFilters: [
+          {
+            gridRange: {
+              sheetId,
+              startRowIndex: 8,
+              endRowIndex: 58,
+              startColumnIndex: 10,
+              endColumnIndex: 11,
+            },
+          },
+        ],
+        includeGridData: true,
+      }
+    );
+    const sheets = res?.data?.sheets || res?.sheets || [];
+    const grid = sheets[0]?.data?.[0];
+    const rows = grid?.rowData || [];
+    const map = new Map();
+    rows.forEach((row, idx) => {
+      const cell = row?.values?.[0];
+      if (isGreenCell(cell)) {
+        map.set(idx + 9, true);
+      }
+    });
+    return map;
+  } catch {
+    return new Map();
+  }
 }
 
 async function syncCalendar(env, force) {
@@ -1128,6 +1215,19 @@ function extractNumber(value) {
     if ("value" in value) return extractNumber(value.value);
   }
   return null;
+}
+
+function isGreenCell(cell) {
+  const color =
+    cell?.effectiveFormat?.backgroundColor ||
+    cell?.userEnteredFormat?.backgroundColor ||
+    cell?.effectiveFormat?.backgroundColorStyle?.rgbColor ||
+    cell?.userEnteredFormat?.backgroundColorStyle?.rgbColor;
+  if (!color) return false;
+  const r = color.red ?? 0;
+  const g = color.green ?? 0;
+  const b = color.blue ?? 0;
+  return g >= 0.5 && g >= r + 0.2 && g >= b + 0.2;
 }
 
 function findHeaderIndex(headers, needle) {

@@ -1,0 +1,1 @@
+ALTER TABLE bookings_raw ADD COLUMN prepaid INTEGER DEFAULT 0;
