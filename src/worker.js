@@ -616,11 +616,12 @@ async function getDashboard(env) {
   const totalSeats = 300;
   const seatsLeft = Math.max(0, totalSeats - bookedCount);
 
-  // Показываем события от сегодня вперёд
+  // Показываем события текущей недели (Пн-Вс)
+  const weekRange = getWeekRangeMsk(now);
   const calendar = await env.DB.prepare(
-    "SELECT * FROM calendar_events WHERE start_time >= ? ORDER BY start_time ASC"
+    "SELECT * FROM calendar_events WHERE start_time >= ? AND start_time <= ? ORDER BY start_time ASC"
   )
-    .bind(today)
+    .bind(weekRange.timeMin, weekRange.timeMax)
     .all();
 
   // Агрегация метрик из постов (fallback когда user metrics пустые)
@@ -1370,11 +1371,23 @@ function formatDateInTimeZone(date, timeZone) {
 }
 
 function getWeekRangeMsk(now) {
-  const start = formatDateInTimeZone(now, "Europe/Moscow");
-  const end = formatDateInTimeZone(
-    new Date(now.getTime() + 30 * 86400000),
-    "Europe/Moscow"
-  );
+  // Получаем текущую дату по Москве
+  const mskDate = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Moscow" }));
+  const dayOfWeek = mskDate.getDay(); // 0 = Вс, 1 = Пн, ..., 6 = Сб
+  
+  // Вычисляем понедельник текущей недели
+  // Если сегодня воскресенье (0), то понедельник был 6 дней назад
+  // Иначе понедельник = (dayOfWeek - 1) дней назад
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(mskDate);
+  monday.setDate(mskDate.getDate() - daysToMonday);
+  
+  // Воскресенье = понедельник + 6 дней
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  
+  const start = formatDateInTimeZone(monday, "Europe/Moscow");
+  const end = formatDateInTimeZone(sunday, "Europe/Moscow");
 
   return {
     timeMin: `${start}T00:00:00+03:00`,
