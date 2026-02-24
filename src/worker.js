@@ -216,26 +216,53 @@ const HTML_PAGE = `<!doctype html>
         };
 
         setText("igFollowers", followers != null ? formatNumber(followers) : "—");
-        setText("igFollowersDelta", followersDelta != null ? `Δ3м: ${followersDelta >= 0 ? "+" : ""}${formatNumber(followersDelta)}` : "Δ3м: —");
+        setText(
+          "igFollowersDelta",
+          followersDelta != null
+            ? "Δ3м: " + (followersDelta >= 0 ? "+" : "") + formatNumber(followersDelta)
+            : "Δ3м: —"
+        );
         setText("igPostsCount", summary?.posts_count != null ? formatNumber(summary.posts_count) : "—");
         setText(
           "igAvgReach",
           summary?.avg_reach != null
-            ? `ср. охват: ${formatNumber(summary.avg_reach)}${postSummary?.best_reach != null ? ` · пик: ${formatNumber(postSummary.best_reach)}` : ""}`
+            ? "ср. охват: " +
+                formatNumber(summary.avg_reach) +
+                (postSummary?.best_reach != null ? " · пик: " + formatNumber(postSummary.best_reach) : "")
             : "ср. охват: —"
         );
 
         setText("igLikesTotal", postSummary?.total_likes != null ? formatNumber(postSummary.total_likes) : "—");
-        setText("igLikesAvg", postSummary?.avg_likes != null ? `средние лайки: ${formatNumber(postSummary.avg_likes)}` : "средние лайки: —");
+        setText(
+          "igLikesAvg",
+          postSummary?.avg_likes != null
+            ? "средние лайки: " + formatNumber(postSummary.avg_likes)
+            : "средние лайки: —"
+        );
 
         setText("igCommentsTotal", postSummary?.total_comments != null ? formatNumber(postSummary.total_comments) : "—");
-        setText("igCommentsAvg", postSummary?.avg_comments != null ? `средние комментарии: ${formatNumber(postSummary.avg_comments)}` : "средние комментарии: —");
+        setText(
+          "igCommentsAvg",
+          postSummary?.avg_comments != null
+            ? "средние комментарии: " + formatNumber(postSummary.avg_comments)
+            : "средние комментарии: —"
+        );
 
         setText("igSavesTotal", postSummary?.total_saves != null ? formatNumber(postSummary.total_saves) : "—");
-        setText("igSavesAvg", postSummary?.avg_saves != null ? `средние сохранения: ${formatNumber(postSummary.avg_saves)}` : "средние сохранения: —");
+        setText(
+          "igSavesAvg",
+          postSummary?.avg_saves != null
+            ? "средние сохранения: " + formatNumber(postSummary.avg_saves)
+            : "средние сохранения: —"
+        );
 
         setText("igSharesTotal", postSummary?.total_shares != null ? formatNumber(postSummary.total_shares) : "—");
-        setText("igSharesAvg", postSummary?.avg_shares != null ? `средние репосты: ${formatNumber(postSummary.avg_shares)}` : "средние репосты: —");
+        setText(
+          "igSharesAvg",
+          postSummary?.avg_shares != null
+            ? "средние репосты: " + formatNumber(postSummary.avg_shares)
+            : "средние репосты: —"
+        );
       }
       function renderBookingsTable(bookings){
         const tbody=document.querySelector(".panel.bookings tbody");
