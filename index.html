@@ -537,9 +537,9 @@
             </div>
           </div>
           <div class="metric">
-            <div class="label">Мест всего</div>
-            <div class="value" id="seatsTotal">—</div>
-            <div class="delta" id="seatsLeft">—</div>
+            <div class="label">Осталось</div>
+            <div class="value" id="seatsLeft">—</div>
+            <div class="delta" id="seatsTotal">—</div>
             <div class="spark">
               <svg viewBox="0 0 160 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4 50C20 54 30 40 44 36C58 32 66 44 80 40C94 36 110 26 124 26C138 18 150 38 156 32"
@@ -798,10 +798,10 @@
       metrics[1].querySelector(".value").textContent = totalInteractions != null ? formatNumber(totalInteractions) : "—";
       metrics[1].querySelector(".delta").textContent = "за 3 месяца";
 
-      // Подписчики
+      // Места
       const seats = data.bookingsSummary || {};
-      metrics[2].querySelector(".value").textContent = seats.total != null ? String(seats.total) : "—";
-      metrics[2].querySelector(".delta").textContent = seats.left != null ? `осталось: ${seats.left}` : "осталось: —";
+      metrics[2].querySelector(".value").textContent = seats.left != null ? String(seats.left) : "—";
+      metrics[2].querySelector(".delta").textContent = seats.total != null ? `мест всего: ${seats.total}` : "мест всего: —";
 
       metrics[3].querySelector(".value").textContent = seats.booked != null ? String(seats.booked) : "—";
       metrics[3].querySelector(".delta").textContent = seats.prepaid != null ? `предоплата: ${seats.prepaid}` : "предоплата: —";
@@ -826,8 +826,8 @@
           : "ср. охват: —"
       );
 
-      setText("seatsTotal", seats.total != null ? String(seats.total) : "—");
-      setText("seatsLeft", seats.left != null ? `осталось: ${seats.left}` : "осталось: —");
+      setText("seatsLeft", seats.left != null ? String(seats.left) : "—");
+      setText("seatsTotal", seats.total != null ? `мест всего: ${seats.total}` : "мест всего: —");
       setText("bookedTotal", seats.booked != null ? String(seats.booked) : "—");
       setText("prepaidTotal", seats.prepaid != null ? `предоплата: ${seats.prepaid}` : "предоплата: —");
 
