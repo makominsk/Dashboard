@@ -79,3 +79,25 @@
     - ✅ Calendar: HTTP 200, 0 событий (нет событий в диапазоне)
   - Все три эндпоинта (`/api/instagram/refresh`, `/api/bookings/refresh`, `/api/calendar/refresh`) работают без ошибок
   - Коммит: 1afab6b "Fix: Change GOOGLESHEETS_VALUES_GET to GOOGLESHEETS_BATCH_GET - all syncs now working"
+
+- 2026-02-24: Исправления Instagram и UI:
+  - Период Instagram переключён на 3 месяца (90 дней) в расчётах и UI.
+  - Починен CI build (убраны шаблонные строки внутри HTML_PAGE).
+  - Добавлен fallback для метрик постов: likes/comments берутся из media list (fields: like_count, comments_count).
+  - Сводка Instagram расширялась, затем удалены неработающие блоки ER/Сохранения/Репосты по запросу.
+  - Переключение на `INSTAGRAM_GET_IG_MEDIA_INSIGHTS` для попытки получить saved/shares.
+  - Дашборд Vercel должен ходить в Cloudflare Worker: `https://dashboard-backend.mako-maryia.workers.dev`.
+
+- 2026-02-24: Блоки бронирований/мест:
+  - Удалены большие дублирующие блоки «Подписчики» и «Посты».
+  - Добавлены два блока: «Мест всего / Мест осталось» и «Забронировано / Предоплата».
+  - Данные считаются из `bookings_raw`:
+    - Забронировано: строки 9–58 по всем листам, где заполнена колонка B (fio).
+    - Мест осталось = 300 − Забронировано.
+    - Предоплата: по колонке K.
+  - Добавлена миграция `migrations/0003_add_prepaid.sql` (колонка `prepaid`).
+  - В `syncSheets` добавлено чтение предоплат:
+    - По цвету (зелёная заливка) через `GOOGLESHEETS_GET_SPREADSHEET_BY_DATA_FILTER`.
+    - По значению в `K9:K58` через `GOOGLESHEETS_VALUES_GET`.
+    - Добавлено экранирование имён листов для A1-диапазонов (пробелы и спецсимволы).
+  - Добавлен расчёт `bookingsSummary` в `/api/dashboard`: total=300, booked, prepaid, left.
