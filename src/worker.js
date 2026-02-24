@@ -547,6 +547,32 @@ async function getDashboard(env) {
     .bind(today)
     .all();
 
+  // Агрегация метрик из постов (fallback когда user metrics пустые)
+  const postSummary = await env.DB.prepare(
+    `SELECT 
+      COUNT(*) as posts_count,
+      SUM(reach) as total_reach,
+      AVG(reach) as avg_reach,
+      SUM(likes) as total_likes,
+      AVG(likes) as avg_likes,
+      SUM(comments) as total_comments,
+      AVG(comments) as avg_comments,
+      SUM(saves) as total_saves,
+      AVG(saves) as avg_saves,
+      MAX(reach) as best_reach
+    FROM instagram_post_metrics 
+    WHERE date >= ?`
+  ).bind(monthAgo).all();
+
+  const postData = postSummary.results?.[0] || {};
+  
+  // Вычисляем общее взаимодействие из постов
+  const totalPostInteractions = 
+    (postData.total_likes || 0) + 
+    (postData.total_comments || 0) + 
+    (postData.total_saves || 0) + 
+    (postData.total_shares || 0);
+
   const latestUser =
     userMetrics.results?.length > 0
       ? userMetrics.results[userMetrics.results.length - 1]
@@ -561,13 +587,27 @@ async function getDashboard(env) {
       year: yearAgo,
       followers_total: latestUser?.followers_total ?? null,
       followers_delta_month: latestUser?.followers_delta_month ?? null,
-      // Агрегированные метрики за 30 дней
+      // Агрегированные метрики за 30 дней (из user metrics)
       monthSummary: {
         total_reach: monthData.total_reach ?? null,
         total_interactions: monthData.total_interactions ?? null,
         total_saves: monthData.total_saves ?? null,
         avg_reach: monthData.avg_reach ? Math.round(monthData.avg_reach) : null,
         days_count: monthData.days_count ?? 0,
+      },
+      // Статистика из постов (fallback)
+      postSummary: {
+        posts_count: postData.posts_count ?? 0,
+        total_reach: postData.total_reach ?? null,
+        avg_reach: postData.avg_reach ? Math.round(postData.avg_reach) : null,
+        total_likes: postData.total_likes ?? null,
+        avg_likes: postData.avg_likes ? Math.round(postData.avg_likes) : null,
+        total_comments: postData.total_comments ?? null,
+        avg_comments: postData.avg_comments ? Math.round(postData.avg_comments) : null,
+        total_saves: postData.total_saves ?? null,
+        avg_saves: postData.avg_saves ? Math.round(postData.avg_saves) : null,
+        best_reach: postData.best_reach ?? null,
+        total_interactions: totalPostInteractions,
       },
       userMetrics: userMetrics.results || [],
       postMetrics: postMetrics.results || [],
