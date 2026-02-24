@@ -881,7 +881,8 @@ async function syncSheets(env) {
   const sheetIdMap = await getSheetIdMap(env);
 
   for (const sheetName of sheetNames) {
-    const range = `${sheetName}!A1:Z${maxRows}`;
+    const safeSheetName = toA1SheetName(sheetName);
+    const range = `${safeSheetName}!A1:Z${maxRows}`;
     const valuesResponse = await fetchComposio(
       env,
       env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
@@ -1018,13 +1019,14 @@ async function fetchPrepaidMap(env, sheetName, sheetId) {
 
 async function fetchPrepaidValuesMap(env, sheetName) {
   try {
+    const safeSheetName = toA1SheetName(sheetName);
     const res = await fetchComposio(
       env,
       env.COMPOSIO_CONN_SHEETS || env.COMPOSIO_CONN_IG,
       "GOOGLESHEETS_VALUES_GET",
       {
         spreadsheet_id: env.SHEETS_ID,
-        range: `${sheetName}!K9:K58`,
+        range: `${safeSheetName}!K9:K58`,
       }
     );
     const values = res?.data?.values || res?.values || [];
@@ -1278,6 +1280,16 @@ function hasNonEmpty(value) {
   if (typeof value === "string") return value.trim() !== "";
   if (typeof value === "number") return true;
   return String(value).trim() !== "";
+}
+
+function toA1SheetName(name) {
+  if (name == null) return "";
+  const s = String(name);
+  // Quote sheet names with spaces or special chars
+  if (/[^A-Za-z0-9_]/.test(s)) {
+    return "'" + s.replace(/'/g, "''") + "'";
+  }
+  return s;
 }
 
 function findHeaderIndex(headers, needle) {
