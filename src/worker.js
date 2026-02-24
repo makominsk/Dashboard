@@ -81,7 +81,7 @@ const HTML_PAGE = `<!doctype html>
       <section class="grid">
         <article class="panel instagram fade-in">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-            <div><h3>Instagram аналитика</h3><p>Статистика за 30 дней</p></div>
+            <div><h3>Instagram аналитика</h3><p>Статистика за 3 месяца</p></div>
             <button class="cta" id="refreshInstagramBtn" type="button">Обновить</button>
           </div>
           <div class="metrics">
@@ -196,11 +196,11 @@ const HTML_PAGE = `<!doctype html>
 
         // Охват
         metrics[0].querySelector(".value").textContent = totalReach != null ? formatNumber(totalReach) : "—";
-        metrics[0].querySelector(".delta").textContent = monthSummary?.days_count ? "за " + monthSummary.days_count + " дней" : "за 30 дней";
+        metrics[0].querySelector(".delta").textContent = monthSummary?.days_count ? "за " + monthSummary.days_count + " дней" : "за 3 месяца";
 
         // Взаимодействия
         metrics[1].querySelector(".value").textContent = totalInteractions != null ? formatNumber(totalInteractions) : "—";
-        metrics[1].querySelector(".delta").textContent = "за 30 дней";
+        metrics[1].querySelector(".delta").textContent = "за 3 месяца";
 
         // ER
         metrics[2].querySelector(".value").textContent = engagementRate != null ? formatPercent(engagementRate) : "—";
@@ -208,7 +208,7 @@ const HTML_PAGE = `<!doctype html>
 
         // Сохранения
         metrics[3].querySelector(".value").textContent = totalSaves != null ? formatNumber(totalSaves) : "—";
-        metrics[3].querySelector(".delta").textContent = "за 30 дней";
+        metrics[3].querySelector(".delta").textContent = "за 3 месяца";
 
         const setText = (id, val) => {
           const el = document.getElementById(id);
@@ -216,7 +216,7 @@ const HTML_PAGE = `<!doctype html>
         };
 
         setText("igFollowers", followers != null ? formatNumber(followers) : "—");
-        setText("igFollowersDelta", followersDelta != null ? `Δ30д: ${followersDelta >= 0 ? "+" : ""}${formatNumber(followersDelta)}` : "Δ30д: —");
+        setText("igFollowersDelta", followersDelta != null ? `Δ3м: ${followersDelta >= 0 ? "+" : ""}${formatNumber(followersDelta)}` : "Δ3м: —");
         setText("igPostsCount", summary?.posts_count != null ? formatNumber(summary.posts_count) : "—");
         setText(
           "igAvgReach",
@@ -542,7 +542,7 @@ async function getDashboard(env) {
   const now = new Date();
   const today = formatDate(now);
   const weekAgo = formatDate(new Date(now.getTime() - 7 * 86400000));
-  const monthAgo = formatDate(new Date(now.getTime() - 30 * 86400000));
+  const monthAgo = formatDate(new Date(now.getTime() - 90 * 86400000));
   const yearAgo = formatDate(new Date(now.getTime() - 365 * 86400000));
 
   // Получаем метрики за последние 30 дней
@@ -685,7 +685,7 @@ async function getDashboard(env) {
 async function syncInstagram(env) {
   const now = new Date();
   // Запрашиваем только последние 30 дней (Instagram API ограничивает диапазон)
-  const sinceDate = new Date(now.getTime() - 30 * 86400000);
+  const sinceDate = new Date(now.getTime() - 90 * 86400000);
 
   const since_str = sinceDate.toISOString().split('T')[0];
   const until_str = now.toISOString().split('T')[0];
@@ -1077,8 +1077,8 @@ function normalizeMediaInsights(raw) {
 function computeFollowersDeltaMonth(dates, dailyMap) {
   if (dates.length < 2) return null;
   const lastDate = dates[dates.length - 1];
-  const thirtyDaysAgoIndex = Math.max(0, dates.length - 30);
-  const firstDate = dates[thirtyDaysAgoIndex];
+  const ninetyDaysAgoIndex = Math.max(0, dates.length - 90);
+  const firstDate = dates[ninetyDaysAgoIndex];
   const first = extractNumber(dailyMap.get(firstDate)?.follower_count);
   const last = extractNumber(dailyMap.get(lastDate)?.follower_count);
   if (first == null || last == null) return null;

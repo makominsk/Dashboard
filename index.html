@@ -508,7 +508,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
           <div>
             <h3>Instagram аналитика</h3>
-            <p>Статистика за 30 дней</p>
+            <p>Статистика за 3 месяца</p>
           </div>
           <button class="cta" id="refreshInstagramBtn" type="button">Обновить</button>
         </div>
@@ -566,27 +566,27 @@
             <div class="ig-sub" id="igFollowersDelta">—</div>
           </div>
           <div class="ig-item">
-            <div class="ig-key">Постов (30д)</div>
+            <div class="ig-key">Постов (3м)</div>
             <div class="ig-val" id="igPostsCount">—</div>
             <div class="ig-sub" id="igAvgReach">—</div>
           </div>
           <div class="ig-item">
-            <div class="ig-key">Лайки (30д)</div>
+            <div class="ig-key">Лайки (3м)</div>
             <div class="ig-val" id="igLikesTotal">—</div>
             <div class="ig-sub" id="igLikesAvg">—</div>
           </div>
           <div class="ig-item">
-            <div class="ig-key">Комментарии (30д)</div>
+            <div class="ig-key">Комментарии (3м)</div>
             <div class="ig-val" id="igCommentsTotal">—</div>
             <div class="ig-sub" id="igCommentsAvg">—</div>
           </div>
           <div class="ig-item">
-            <div class="ig-key">Сохранения (30д)</div>
+            <div class="ig-key">Сохранения (3м)</div>
             <div class="ig-val" id="igSavesTotal">—</div>
             <div class="ig-sub" id="igSavesAvg">—</div>
           </div>
           <div class="ig-item">
-            <div class="ig-key">Репосты (30д)</div>
+            <div class="ig-key">Репосты (3м)</div>
             <div class="ig-val" id="igSharesTotal">—</div>
             <div class="ig-sub" id="igSharesAvg">—</div>
           </div>
@@ -804,11 +804,11 @@
 
       // Охват
       metrics[0].querySelector(".value").textContent = totalReach != null ? formatNumber(totalReach) : "—";
-      metrics[0].querySelector(".delta").textContent = monthSummary?.days_count ? `за ${monthSummary.days_count} дней` : "за 30 дней";
+      metrics[0].querySelector(".delta").textContent = monthSummary?.days_count ? `за ${monthSummary.days_count} дней` : "за 3 месяца";
 
       // Взаимодействия
       metrics[1].querySelector(".value").textContent = totalInteractions != null ? formatNumber(totalInteractions) : "—";
-      metrics[1].querySelector(".delta").textContent = "за 30 дней";
+      metrics[1].querySelector(".delta").textContent = "за 3 месяца";
 
       // ER
       metrics[2].querySelector(".value").textContent = engagementRate != null ? formatPercent(engagementRate) : "—";
@@ -816,7 +816,7 @@
 
       // Сохранения
       metrics[3].querySelector(".value").textContent = totalSaves != null ? formatNumber(totalSaves) : "—";
-      metrics[3].querySelector(".delta").textContent = "за 30 дней";
+      metrics[3].querySelector(".delta").textContent = "за 3 месяца";
 
       const setText = (id, val) => {
         const el = document.getElementById(id);
@@ -827,8 +827,8 @@
       setText(
         "igFollowersDelta",
         summary?.followers_delta_month != null
-          ? `Δ30д: ${summary.followers_delta_month >= 0 ? "+" : ""}${formatNumber(summary.followers_delta_month)}`
-          : "Δ30д: —"
+          ? `Δ3м: ${summary.followers_delta_month >= 0 ? "+" : ""}${formatNumber(summary.followers_delta_month)}`
+          : "Δ3м: —"
       );
       setText("igPostsCount", summary?.posts_count != null ? formatNumber(summary.posts_count) : "—");
       setText(
