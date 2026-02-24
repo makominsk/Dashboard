@@ -1004,7 +1004,7 @@ async function fetchPrepaidMap(env, sheetName, sheetId) {
     const map = new Map();
     rows.forEach((row, idx) => {
       const cell = row?.values?.[0];
-      if (isGreenCell(cell)) {
+      if (isGreenCell(cell) || hasCellValue(cell)) {
         map.set(idx + 9, true);
       }
     });
@@ -1229,6 +1229,21 @@ function isGreenCell(cell) {
   const b = color.blue ?? 0;
   // Более мягкий критерий "зелёного": зелёный доминирует и достаточно яркий.
   return g >= 0.45 && g >= r && g >= b && (g - Math.max(r, b)) >= 0.05;
+}
+
+function hasCellValue(cell) {
+  const formatted = cell?.formattedValue;
+  if (formatted != null && String(formatted).trim() !== "") return true;
+  const userEntered = cell?.userEnteredValue;
+  if (userEntered == null) return false;
+  if (typeof userEntered === "string") return userEntered.trim() !== "";
+  if (typeof userEntered === "number") return true;
+  if (typeof userEntered === "object") {
+    if ("stringValue" in userEntered) return String(userEntered.stringValue || "").trim() !== "";
+    if ("numberValue" in userEntered) return true;
+    if ("boolValue" in userEntered) return userEntered.boolValue === true;
+  }
+  return false;
 }
 
 function findHeaderIndex(headers, needle) {
