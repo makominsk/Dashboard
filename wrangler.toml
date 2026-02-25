@@ -13,6 +13,10 @@ SHEETS_ID = "1pk2pgc9VTkCnNT9w0InJJ6LjOzzdfVQfkAER_-sjdm0"
 IG_USER_ID = "34985356197729987"
 CALENDAR_ID = "primary"
 SHEETS_MAX_ROWS = "2000"
+OPENAI_MODEL = "gpt-4o-mini"
+TRENDS_CACHE_HOURS = "24"
+INSIGHTS_CACHE_HOURS = "24"
+TREND_SOURCES = "HubSpot Sales Blog|https://blog.hubspot.com/sales/rss.xml,Planet AI (Aggregator)|https://planet-ai.net/rss.xml"
 
 [[kv_namespaces]]
 binding = "KV"
@@ -24,4 +28,4 @@ database_name = "dashboard"
 database_id = "79a1f7e8-2538-44e0-9bc9-788529a8f25d"
 
 [triggers]
-crons = ["*/30 * * * *", "0 * * * *"]
+crons = ["*/30 * * * *", "0 * * * *", "30 6 * * *"]

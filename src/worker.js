@@ -23,6 +23,32 @@ const HTML_PAGE = `<!doctype html>
       .panel.bookings{grid-column:span 5;background:linear-gradient(160deg,rgba(124,242,181,.08),rgba(18,21,34,.9))}
       .panel.radio{grid-column:span 3;background:linear-gradient(160deg,rgba(242,201,76,.14),rgba(18,21,34,.9))}
       .panel.schedule{grid-column:span 12;display:grid;grid-template-columns:2.2fr 1fr;gap:20px;background:linear-gradient(160deg,rgba(90,208,255,.08),rgba(18,21,34,.9))}
+      .panel.analytics{grid-column:span 7;background:linear-gradient(160deg,rgba(90,208,255,.06),rgba(18,21,34,.9))}
+      .panel.trends{grid-column:span 5;background:linear-gradient(160deg,rgba(242,201,76,.12),rgba(18,21,34,.9))}
+      .insight-grid{margin-top:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+      .insight-card{padding:14px;border-radius:14px;border:1px solid var(--border);background:rgba(12,16,28,.7);display:grid;gap:6px}
+      .insight-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+      .insight-value{font-size:16px;font-weight:600}
+      .insight-sub{font-size:12px;color:var(--muted)}
+      .trend-list{margin-top:14px;display:grid;gap:10px;max-height:260px;overflow:auto}
+      .trend-item{padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(12,16,28,.65);display:grid;gap:6px;font-size:12px}
+      .trend-title{font-weight:600;font-size:13px}
+      .trend-meta{color:var(--muted);font-size:11px}
+      .trend-summary{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed rgba(242,201,76,.5);background:rgba(242,201,76,.08);font-size:12px;color:var(--muted);line-height:1.4}
+      .trend-reco{margin-top:10px;display:grid;gap:8px;font-size:12px;color:var(--muted)}
+      .data-note{margin-top:12px;font-size:11px;color:var(--muted)}
+      .modal-backdrop{position:fixed;inset:0;background:rgba(5,8,20,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:20;padding:24px}
+      .modal-backdrop.active{display:flex}
+      .modal{width:min(880px,100%);background:linear-gradient(160deg,rgba(18,21,34,.98),rgba(10,12,20,.98));border:1px solid rgba(255,255,255,.12);border-radius:22px;box-shadow:0 30px 80px rgba(5,8,20,.7);padding:22px 24px;display:grid;gap:16px;position:relative}
+      .modal-header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+      .modal-header h3{margin:0;font-size:18px}
+      .modal-header p{margin:4px 0 0;font-size:12px;color:var(--muted)}
+      .modal-close{border:1px solid rgba(90,208,255,.4);background:rgba(90,208,255,.12);color:var(--accent-2);border-radius:10px;padding:6px 12px;font-size:12px;cursor:pointer}
+      .modal-body{display:grid;gap:12px}
+      .modal-section{padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(12,16,28,.7);display:grid;gap:8px}
+      .modal-label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+      .modal-text{font-size:13px;line-height:1.5}
+      .modal-list{display:grid;gap:8px;font-size:12px;color:var(--muted)}
       .metrics{margin-top:18px;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
       .metric{padding:16px;border-radius:16px;border:1px solid var(--border);background:rgba(12,16,28,.75)}
       .metric .label{color:var(--muted);font-size:12px;letter-spacing:.2px}
@@ -59,7 +85,7 @@ const HTML_PAGE = `<!doctype html>
       .today-card h4{margin:0;font-size:16px}
       .today-list{display:grid;gap:10px;font-size:12px;color:var(--muted)}
       .footer-note{margin-top:28px;color:var(--muted);font-size:12px;text-align:right}
-      @media(max-width:980px){header{flex-direction:column;align-items:flex-start}.panel.instagram,.panel.bookings,.panel.radio{grid-column:span 12}.panel.schedule{grid-template-columns:1fr}}
+      @media(max-width:980px){header{flex-direction:column;align-items:flex-start}.panel.instagram,.panel.bookings,.panel.analytics,.panel.trends,.panel.radio{grid-column:span 12}.panel.schedule{grid-template-columns:1fr}}
       @media(max-width:720px){.metrics{grid-template-columns:1fr}.ig-details{grid-template-columns:1fr}.week{grid-template-columns:repeat(2,1fr)}}
       .fade-in{opacity:0;transform:translateY(12px);animation:rise .9s ease forwards}
       .fade-in.delay-1{animation-delay:.15s}.fade-in.delay-2{animation-delay:.3s}.fade-in.delay-3{animation-delay:.45s}
@@ -76,6 +102,7 @@ const HTML_PAGE = `<!doctype html>
         </div>
         <div class="header-actions">
           <button class="cta" id="refreshAllBtn" type="button">Обновить все данные</button>
+          <button class="cta" id="openInsightsBtn" type="button">Итоги и рекомендации</button>
         </div>
       </header>
       <section class="grid">
@@ -121,6 +148,23 @@ const HTML_PAGE = `<!doctype html>
             <div class="weekday" id="radioWeekday">—</div>
           </div>
         </article>
+        <article class="panel analytics fade-in delay-2">
+          <div><h3>Аналитика спроса</h3><p>Лучшие дни недели и темп заполнения мест</p></div>
+          <div class="insight-grid">
+            <div class="insight-card"><div class="insight-title">Лучшие дни IG</div><div class="insight-value" id="bestDaysIg">—</div><div class="insight-sub" id="bestDaysIgMeta">—</div></div>
+            <div class="insight-card"><div class="insight-title">Лучшие дни брони</div><div class="insight-value" id="bestDaysBookings">—</div><div class="insight-sub" id="bestDaysBookingsMeta">—</div></div>
+            <div class="insight-card"><div class="insight-title">Темп заполнения</div><div class="insight-value" id="bookingsPace">—</div><div class="insight-sub" id="bookingsForecast">—</div></div>
+            <div class="insight-card"><div class="insight-title">Итоги года</div><div class="insight-value" id="yearSummary">—</div><div class="insight-sub" id="yearSummaryMeta">—</div></div>
+          </div>
+          <div class="data-note" id="analyticsNote">Данные готовятся…</div>
+        </article>
+        <article class="panel trends fade-in delay-3">
+          <div><h3>AI‑тенденции в продажах</h3><p>Мониторинг мировых источников и рекомендации</p></div>
+          <div class="trend-summary" id="trendSummary">Обновляем сводку…</div>
+          <div class="trend-reco" id="trendRecommendations"></div>
+          <div class="trend-list" id="trendList"></div>
+          <div class="data-note" id="trendUpdated">—</div>
+        </article>
         <article class="panel schedule fade-in delay-3">
           <div>
             <h3>Расписание недели</h3>
@@ -142,6 +186,20 @@ const HTML_PAGE = `<!doctype html>
           </div>
         </article>
       </section>
+      <div class="modal-backdrop" id="insightsModal" aria-hidden="true">
+        <div class="modal">
+          <div class="modal-header">
+            <div><h3>Краткое summary и вывод</h3><p id="insightsUpdated">—</p></div>
+            <button class="modal-close" id="closeInsightsBtn" type="button">Закрыть</button>
+          </div>
+          <div class="modal-body">
+            <div class="modal-section"><div class="modal-label">Краткое summary</div><div class="modal-text" id="insightsSummary">—</div></div>
+            <div class="modal-section"><div class="modal-label">Вывод</div><div class="modal-text" id="insightsConclusion">—</div></div>
+            <div class="modal-section"><div class="modal-label">Рекомендации</div><div class="modal-list" id="insightsRecommendations"></div></div>
+            <div class="modal-section"><div class="modal-label">Обновление</div><div class="modal-text" id="insightsSchedule">—</div></div>
+          </div>
+        </div>
+      </div>
       <div class="footer-note">Данные обновлены: <span id="updatedAt">—</span></div>
     </div>
     <script defer src="https://radiopotok.ru/f/script6/16e18ac98844452e0eba34f615bdeaad8ba8a53a7e59e232de17502a17cd57d3.js" charset="UTF-8"></script>
@@ -172,6 +230,21 @@ const HTML_PAGE = `<!doctype html>
       async function getDashboard(){
         const res=await fetch(apiBase+"/api/dashboard",{headers:{"Content-Type":"application/json",...(authHeader?{Authorization:authHeader}:{})}});
         if(!res.ok)throw new Error("GET /api/dashboard → "+res.status);
+        return res.json();
+      }
+      async function getAnalytics(){
+        const res=await fetch(apiBase+"/api/analytics",{headers:{"Content-Type":"application/json",...(authHeader?{Authorization:authHeader}:{})}});
+        if(!res.ok)throw new Error("GET /api/analytics → "+res.status);
+        return res.json();
+      }
+      async function getTrends(){
+        const res=await fetch(apiBase+"/api/trends",{headers:{"Content-Type":"application/json",...(authHeader?{Authorization:authHeader}:{})}});
+        if(!res.ok)throw new Error("GET /api/trends → "+res.status);
+        return res.json();
+      }
+      async function getInsights(){
+        const res=await fetch(apiBase+"/api/insights",{headers:{"Content-Type":"application/json",...(authHeader?{Authorization:authHeader}:{})}});
+        if(!res.ok)throw new Error("GET /api/insights → "+res.status);
         return res.json();
       }
       function formatNumber(n){if(n>=1e6)return(n/1e6).toFixed(1)+"M";if(n>=1000)return(n/1000).toFixed(1)+"K";return String(n)}
@@ -279,6 +352,81 @@ const HTML_PAGE = `<!doctype html>
         });
         if(todayList&&!todayList.children.length)todayList.innerHTML='<div style="color:var(--muted)">Нет событий на сегодня</div>';
       }
+      function renderAnalytics(data){
+        const bestIg=document.getElementById("bestDaysIg");
+        const bestIgMeta=document.getElementById("bestDaysIgMeta");
+        const bestBookings=document.getElementById("bestDaysBookings");
+        const bestBookingsMeta=document.getElementById("bestDaysBookingsMeta");
+        const bookingsPace=document.getElementById("bookingsPace");
+        const bookingsForecast=document.getElementById("bookingsForecast");
+        const yearSummary=document.getElementById("yearSummary");
+        const yearSummaryMeta=document.getElementById("yearSummaryMeta");
+        const note=document.getElementById("analyticsNote");
+
+        const bestIgDays=data?.best_days?.instagram||[];
+        const bestBookingDays=data?.best_days?.bookings||[];
+        const pace=data?.bookings_pace||{};
+        const year=data?.year_overview||{};
+
+        bestIg.textContent=bestIgDays.map(d=>d.label).join(", ")||"—";
+        bestIgMeta.textContent=data?.ig_note||"Оценка на основе дневных метрик";
+        bestBookings.textContent=bestBookingDays.map(d=>d.label).join(", ")||"—";
+        bestBookingsMeta.textContent=data?.bookings_note||"По времени синхронизации";
+        bookingsPace.textContent=pace.avg_per_day!=null?pace.avg_per_day+" броней/день":"—";
+        bookingsForecast.textContent=pace.days_to_fill!=null?"до заполнения: ~"+pace.days_to_fill+" дн.":"прогноз недоступен";
+        yearSummary.textContent=year.booked_total!=null?year.booked_total+" броней":"—";
+        yearSummaryMeta.textContent=year.prepaid_rate!=null?"предоплата: "+year.prepaid_rate+"%":"предоплата: —";
+        note.textContent=data?.data_quality_note||"Данные обновлены";
+      }
+      function renderTrends(data){
+        const summary=document.getElementById("trendSummary");
+        const list=document.getElementById("trendList");
+        const recos=document.getElementById("trendRecommendations");
+        const updated=document.getElementById("trendUpdated");
+
+        summary.textContent=data?.summary||"Сводка пока недоступна";
+        updated.textContent=data?.updated_at?"обновлено: "+new Date(data.updated_at).toLocaleString(locale):"обновлено: —";
+
+        recos.innerHTML="";
+        (data?.recommendations||[]).forEach(r=>{
+          const el=document.createElement("div");
+          el.textContent="• "+r;
+          recos.appendChild(el);
+        });
+
+        list.innerHTML="";
+        (data?.items||[]).slice(0,10).forEach(item=>{
+          const el=document.createElement("div");
+          el.className="trend-item";
+          el.innerHTML=
+            '<div class="trend-title">'+escapeHtml(item.title||"Без названия")+'</div>'+
+            '<div class="trend-meta">'+escapeHtml(item.source||"")+
+            (item.published_at?" · "+escapeHtml(item.published_at):"")+
+            '</div>'+
+            '<div>'+escapeHtml(item.excerpt||"")+'</div>';
+          list.appendChild(el);
+        });
+      }
+      function renderInsights(data){
+        const summary=document.getElementById("insightsSummary");
+        const conclusion=document.getElementById("insightsConclusion");
+        const list=document.getElementById("insightsRecommendations");
+        const updated=document.getElementById("insightsUpdated");
+        const schedule=document.getElementById("insightsSchedule");
+
+        summary.textContent=data?.summary||"Сводка пока недоступна";
+        conclusion.textContent=data?.conclusion||"Вывод пока недоступен";
+
+        list.innerHTML="";
+        (data?.recommendations||[]).forEach(item=>{
+          const el=document.createElement("div");
+          el.textContent="• "+item;
+          list.appendChild(el);
+        });
+
+        updated.textContent=data?.updated_at?"обновлено: "+new Date(data.updated_at).toLocaleString(locale):"обновлено: —";
+        schedule.textContent=data?.refresh_schedule||"ежедневно";
+      }
       async function loadDashboard(){
         try{
           const data=await getDashboard();
@@ -288,15 +436,41 @@ const HTML_PAGE = `<!doctype html>
           updatedAt.textContent=new Date().toLocaleString(locale,{dateStyle:"short",timeStyle:"short"});
         }catch(err){console.error("Ошибка загрузки:",err);updatedAt.textContent="Ошибка загрузки"}
       }
+      async function loadInsights(){
+        try{
+          const [analytics,trends,insights]=await Promise.all([getAnalytics(),getTrends(),getInsights()]);
+          renderAnalytics(analytics);
+          renderTrends(trends);
+          renderInsights(insights);
+        }catch(err){console.error("Ошибка аналитики/трендов:",err)}
+      }
       document.getElementById("refreshAllBtn")?.addEventListener("click",async()=>{
         const btn=document.getElementById("refreshAllBtn");btn.disabled=true;
-        try{await callApi("/api/refresh-all");await loadDashboard()}catch(e){console.error(e)}finally{btn.disabled=false}
+        try{await callApi("/api/refresh-all");await loadDashboard();await loadInsights()}catch(e){console.error(e)}finally{btn.disabled=false}
       });
       document.getElementById("refreshInstagramBtn")?.addEventListener("click",async()=>{
         const btn=document.getElementById("refreshInstagramBtn");btn.disabled=true;
-        try{await callApi("/api/instagram/refresh");await loadDashboard()}catch(e){console.error(e)}finally{btn.disabled=false}
+        try{await callApi("/api/instagram/refresh");await loadDashboard();await loadInsights()}catch(e){console.error(e)}finally{btn.disabled=false}
+      });
+      const insightsModal=document.getElementById("insightsModal");
+      const openInsightsBtn=document.getElementById("openInsightsBtn");
+      const closeInsightsBtn=document.getElementById("closeInsightsBtn");
+      openInsightsBtn?.addEventListener("click",()=>{
+        insightsModal?.classList.add("active");
+        insightsModal?.setAttribute("aria-hidden","false");
+      });
+      closeInsightsBtn?.addEventListener("click",()=>{
+        insightsModal?.classList.remove("active");
+        insightsModal?.setAttribute("aria-hidden","true");
+      });
+      insightsModal?.addEventListener("click",event=>{
+        if(event.target===insightsModal){
+          insightsModal.classList.remove("active");
+          insightsModal.setAttribute("aria-hidden","true");
+        }
       });
       loadDashboard();
+      loadInsights();
     </script>
   </body>
 </html>`;
@@ -328,6 +502,24 @@ export default {
       // GET /api/dashboard — публичный, без авторизации (для Vercel фронтенда)
       if (request.method === "GET" && path === "/api/dashboard") {
         const data = await getDashboard(env);
+        return jsonResponse(data);
+      }
+
+      // GET /api/analytics — аналитика спроса и темпа заполнения
+      if (request.method === "GET" && path === "/api/analytics") {
+        const data = await getAnalytics(env);
+        return jsonResponse(data);
+      }
+
+      // GET /api/trends — мониторинг AI-трендов в продажах
+      if (request.method === "GET" && path === "/api/trends") {
+        const data = await getTrends(env);
+        return jsonResponse(data);
+      }
+
+      // GET /api/insights — объединённые выводы и рекомендации
+      if (request.method === "GET" && path === "/api/insights") {
+        const data = await getInsights(env);
         return jsonResponse(data);
       }
 
@@ -510,6 +702,11 @@ export default {
 
     if (event.cron === "0 * * * *") {
       ctx.waitUntil(syncCalendar(env, false));
+      return;
+    }
+    if (event.cron === "30 6 * * *") {
+      ctx.waitUntil(refreshTrends(env));
+      ctx.waitUntil(refreshInsights(env));
       return;
     }
   },
@@ -725,6 +922,307 @@ async function getDashboard(env) {
     bookings: bookings.results || [],
     calendar: calendar.results || [],
   };
+}
+
+async function getAnalytics(env) {
+  const now = new Date();
+  const yearStart = `${now.getFullYear()}-01-01`;
+  const monthAgo = formatDate(new Date(now.getTime() - 30 * 86400000));
+
+  const igMin = await env.DB.prepare("SELECT MIN(date) as min_date FROM instagram_user_metrics").all();
+  const igMinDate = igMin.results?.[0]?.min_date || null;
+
+  const igDowRows = await env.DB.prepare(
+    `SELECT strftime('%w', date) as dow,
+            COUNT(*) as days_count,
+            SUM(reach) as reach_sum,
+            SUM(total_interactions) as interactions_sum,
+            SUM(saves) as saves_sum,
+            AVG(reach) as reach_avg,
+            AVG(total_interactions) as interactions_avg
+     FROM instagram_user_metrics
+     WHERE date >= ?
+     GROUP BY dow`
+  ).bind(yearStart).all();
+
+  const bookingsFirsts = await env.DB.prepare(
+    `WITH firsts AS (
+      SELECT hash, MIN(updated_at) as first_seen, MAX(prepaid) as prepaid, row_index, fio
+      FROM bookings_raw
+      WHERE fio IS NOT NULL AND TRIM(fio) <> ''
+      GROUP BY hash
+    )
+    SELECT date(first_seen) as day,
+           COUNT(*) as new_bookings,
+           SUM(prepaid) as prepaid_count
+    FROM firsts
+    WHERE row_index BETWEEN 9 AND 58
+      AND date(first_seen) >= ?
+    GROUP BY day
+    ORDER BY day ASC`
+  ).bind(yearStart).all();
+
+  const bookingsDowRows = await env.DB.prepare(
+    `WITH firsts AS (
+      SELECT hash, MIN(updated_at) as first_seen, MAX(prepaid) as prepaid, row_index, fio
+      FROM bookings_raw
+      WHERE fio IS NOT NULL AND TRIM(fio) <> ''
+      GROUP BY hash
+    )
+    SELECT strftime('%w', first_seen) as dow,
+           COUNT(*) as new_bookings,
+           SUM(prepaid) as prepaid_count,
+           AVG(prepaid) as prepaid_avg
+    FROM firsts
+    WHERE row_index BETWEEN 9 AND 58
+      AND date(first_seen) >= ?
+    GROUP BY dow`
+  ).bind(yearStart).all();
+
+  const bookedSummary = await env.DB.prepare(
+    `WITH latest AS (
+      SELECT sheet_name, row_index, MAX(updated_at) as max_updated
+      FROM bookings_raw
+      GROUP BY sheet_name, row_index
+    ),
+    rows AS (
+      SELECT b.sheet_name, b.row_index, b.fio, b.prepaid
+      FROM bookings_raw b
+      JOIN latest l
+        ON b.sheet_name = l.sheet_name
+       AND b.row_index = l.row_index
+       AND b.updated_at = l.max_updated
+    )
+    SELECT
+      SUM(CASE WHEN row_index BETWEEN 9 AND 58 AND fio IS NOT NULL AND TRIM(fio) <> '' THEN 1 ELSE 0 END) as booked,
+      SUM(CASE WHEN row_index BETWEEN 9 AND 58 AND fio IS NOT NULL AND TRIM(fio) <> '' AND prepaid = 1 THEN 1 ELSE 0 END) as prepaid
+    FROM rows`
+  ).all();
+
+  const bookedCount = bookedSummary.results?.[0]?.booked || 0;
+  const prepaidCount = bookedSummary.results?.[0]?.prepaid || 0;
+  const totalSeats = 300;
+  const seatsLeft = Math.max(0, totalSeats - bookedCount);
+
+  const bookingsLastMonth = await env.DB.prepare(
+    `WITH firsts AS (
+      SELECT hash, MIN(updated_at) as first_seen, row_index, fio
+      FROM bookings_raw
+      WHERE fio IS NOT NULL AND TRIM(fio) <> ''
+      GROUP BY hash
+    )
+    SELECT date(first_seen) as day, COUNT(*) as new_bookings
+    FROM firsts
+    WHERE row_index BETWEEN 9 AND 58
+      AND date(first_seen) >= ?
+    GROUP BY day`
+  ).bind(monthAgo).all();
+
+  const dailyCounts = bookingsLastMonth.results || [];
+  const daysCount = dailyCounts.length || 0;
+  const totalNew = dailyCounts.reduce((sum, r) => sum + (r.new_bookings || 0), 0);
+  const avgPerDay = daysCount ? Math.round((totalNew / daysCount) * 10) / 10 : null;
+  const daysToFill = avgPerDay ? Math.ceil(seatsLeft / avgPerDay) : null;
+
+  const DOW_LABELS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+  const igDow = (igDowRows.results || []).map((row) => {
+    const dow = Number(row.dow);
+    const interactionsAvg = row.interactions_avg ? Math.round(row.interactions_avg) : 0;
+    const reachAvg = row.reach_avg ? Math.round(row.reach_avg) : 0;
+    const score = interactionsAvg * 0.7 + reachAvg * 0.3;
+    return { dow, label: DOW_LABELS[dow] || String(dow), interactions_avg: interactionsAvg, reach_avg: reachAvg, score };
+  }).sort((a, b) => b.score - a.score);
+
+  const bookingsDow = (bookingsDowRows.results || []).map((row) => {
+    const dow = Number(row.dow);
+    return { dow, label: DOW_LABELS[dow] || String(dow), new_bookings: row.new_bookings || 0 };
+  }).sort((a, b) => b.new_bookings - a.new_bookings);
+
+  const bestIgDays = igDow.slice(0, 2).filter((d) => d.score > 0);
+  const bestBookingDays = bookingsDow.slice(0, 2).filter((d) => d.new_bookings > 0);
+
+  const igDailyRows = await env.DB.prepare(
+    `SELECT date, total_interactions as interactions
+     FROM instagram_user_metrics
+     WHERE date >= ?
+     ORDER BY date ASC`
+  ).bind(yearStart).all();
+
+  const bookingsDailyRows = await env.DB.prepare(
+    `WITH firsts AS (
+      SELECT hash, MIN(updated_at) as first_seen, row_index, fio
+      FROM bookings_raw
+      WHERE fio IS NOT NULL AND TRIM(fio) <> ''
+      GROUP BY hash
+    )
+    SELECT date(first_seen) as day, COUNT(*) as new_bookings
+    FROM firsts
+    WHERE row_index BETWEEN 9 AND 58
+      AND date(first_seen) >= ?
+    GROUP BY day
+    ORDER BY day ASC`
+  ).bind(yearStart).all();
+
+  const igMap = new Map((igDailyRows.results || []).map((r) => [r.date, r.interactions || 0]));
+  const bookingsMap = new Map((bookingsDailyRows.results || []).map((r) => [r.day, r.new_bookings || 0]));
+  const overlapDates = [...igMap.keys()].filter((d) => bookingsMap.has(d));
+  const igSeries = overlapDates.map((d) => igMap.get(d));
+  const bookingsSeries = overlapDates.map((d) => bookingsMap.get(d));
+  const correlation = computePearson(igSeries, bookingsSeries);
+
+  const yearTotalBookings = (bookingsFirsts.results || []).reduce((sum, r) => sum + (r.new_bookings || 0), 0);
+  const yearTotalPrepaid = (bookingsFirsts.results || []).reduce((sum, r) => sum + (r.prepaid_count || 0), 0);
+  const prepaidRate = yearTotalBookings ? Math.round((yearTotalPrepaid / yearTotalBookings) * 100) : null;
+
+  return {
+    generated_at: new Date().toISOString(),
+    best_days: {
+      instagram: bestIgDays,
+      bookings: bestBookingDays,
+    },
+    bookings_pace: {
+      avg_per_day: avgPerDay,
+      days_to_fill: daysToFill,
+      seats_left: seatsLeft,
+    },
+    year_overview: {
+      booked_total: yearTotalBookings,
+      prepaid_total: yearTotalPrepaid,
+      prepaid_rate: prepaidRate,
+      data_from: yearStart,
+      ig_data_from: igMinDate,
+    },
+    correlation: {
+      ig_vs_bookings: correlation,
+      days_matched: overlapDates.length,
+    },
+    ig_note: igMinDate ? `Instagram метрики доступны с ${igMinDate}` : "Instagram метрики за последние 90 дней",
+    bookings_note: "Время заявки недоступно, используется время синхронизации",
+    data_quality_note: "Время суток определить нельзя без timestamp заявки/публикации. Аналитика по дням недели доступна.",
+  };
+}
+
+async function getTrends(env) {
+  const cached = await env.KV.get("trends:latest", { type: "json" });
+  const cacheHours = Number(env.TRENDS_CACHE_HOURS || 24);
+  if (cached?.updated_at) {
+    const ageMs = Date.now() - new Date(cached.updated_at).getTime();
+    if (ageMs < cacheHours * 3600000) {
+      return cached;
+    }
+  }
+  return await refreshTrends(env);
+}
+
+async function refreshTrends(env) {
+  const sources = parseTrendSources(env.TREND_SOURCES);
+  const items = [];
+
+  for (const source of sources) {
+    try {
+      const feedItems = await fetchFeedItems(source.url);
+      feedItems.slice(0, 8).forEach((it) => {
+        items.push({
+          source: source.name,
+          title: it.title,
+          link: it.link,
+          published_at: it.published_at,
+          excerpt: it.excerpt,
+        });
+      });
+    } catch (e) {
+      items.push({
+        source: source.name,
+        title: "Ошибка загрузки источника",
+        link: "",
+        published_at: "",
+        excerpt: e.message,
+      });
+    }
+  }
+
+  const sorted = items
+    .filter((i) => i.title)
+    .sort((a, b) => (b.published_at || "").localeCompare(a.published_at || ""));
+
+  let summary = "Сводка недоступна — нет ключа OpenAI.";
+  let recommendations = [];
+
+  if (env.OPENAI_API_KEY && env.OPENAI_MODEL) {
+    const ai = await generateTrendSummary(env, sorted.slice(0, 20));
+    if (ai?.summary) summary = ai.summary;
+    if (Array.isArray(ai?.recommendations)) recommendations = ai.recommendations;
+  }
+
+  const payload = {
+    updated_at: new Date().toISOString(),
+    summary,
+    recommendations,
+    items: sorted.slice(0, 20),
+  };
+
+  await env.KV.put("trends:latest", JSON.stringify(payload));
+  return payload;
+}
+
+async function getInsights(env) {
+  const cached = await env.KV.get("insights:latest", { type: "json" });
+  const cacheHours = Number(env.INSIGHTS_CACHE_HOURS || 24);
+  if (cached?.updated_at) {
+    const ageMs = Date.now() - new Date(cached.updated_at).getTime();
+    if (ageMs < cacheHours * 3600000) {
+      return cached;
+    }
+  }
+  return await refreshInsights(env);
+}
+
+async function refreshInsights(env) {
+  const [analytics, trends] = await Promise.all([getAnalytics(env), getTrends(env)]);
+  const schedule = "ежедневно, 06:30 UTC (09:30 MSK)";
+
+  let summary = "Сводка недоступна — нет ключа OpenAI.";
+  let conclusion = "Недостаточно данных для вывода.";
+  let recommendations = [];
+
+  if (env.OPENAI_API_KEY && env.OPENAI_MODEL) {
+    const ai = await generateInsightsSummary(env, analytics, trends);
+    if (ai?.summary) summary = ai.summary;
+    if (ai?.conclusion) conclusion = ai.conclusion;
+    if (Array.isArray(ai?.recommendations)) recommendations = ai.recommendations;
+  } else {
+    const bestIg = (analytics?.best_days?.instagram || []).map((d) => d.label).join(", ");
+    const bestBookings = (analytics?.best_days?.bookings || []).map((d) => d.label).join(", ");
+    const pace = analytics?.bookings_pace?.avg_per_day != null ? `${analytics.bookings_pace.avg_per_day} броней/день` : "нет данных";
+    const daysToFill = analytics?.bookings_pace?.days_to_fill != null ? `${analytics.bookings_pace.days_to_fill} дней` : "нет прогноза";
+    const prepaidRate = analytics?.year_overview?.prepaid_rate != null ? `${analytics.year_overview.prepaid_rate}%` : "—";
+
+    summary =
+      `Лучшие дни IG: ${bestIg || "недостаточно данных"}. ` +
+      `Лучшие дни бронирований: ${bestBookings || "недостаточно данных"}. ` +
+      `Темп заполнения: ${pace}.`;
+    conclusion = `До полного заполнения при текущем темпе: ${daysToFill}. Предоплата: ${prepaidRate}.`;
+    recommendations = [
+      "Сместите рекламные активности на лучшие дни недели по IG и бронированиям.",
+      "Усилите конверсию в предоплату для ускорения заполнения мест.",
+      "Добавьте сбор времени заявки, чтобы выявить лучшие часы для рекламы.",
+    ];
+  }
+
+  const payload = {
+    updated_at: new Date().toISOString(),
+    summary,
+    conclusion,
+    recommendations,
+    refresh_schedule: schedule,
+    sources: {
+      analytics_updated_at: analytics?.generated_at || null,
+      trends_updated_at: trends?.updated_at || null,
+    },
+  };
+
+  await env.KV.put("insights:latest", JSON.stringify(payload));
+  return payload;
 }
 
 async function syncInstagram(env) {
@@ -1401,4 +1899,193 @@ async function sha256(input) {
   return [...new Uint8Array(digest)]
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+function computePearson(xs, ys) {
+  if (!xs.length || xs.length !== ys.length) return null;
+  const n = xs.length;
+  const meanX = xs.reduce((a, b) => a + b, 0) / n;
+  const meanY = ys.reduce((a, b) => a + b, 0) / n;
+  let num = 0;
+  let denX = 0;
+  let denY = 0;
+  for (let i = 0; i < n; i += 1) {
+    const dx = xs[i] - meanX;
+    const dy = ys[i] - meanY;
+    num += dx * dy;
+    denX += dx * dx;
+    denY += dy * dy;
+  }
+  const denom = Math.sqrt(denX * denY);
+  if (!denom) return null;
+  return Math.round((num / denom) * 100) / 100;
+}
+
+function parseTrendSources(raw) {
+  const defaults = [
+    { name: "HubSpot Sales Blog", url: "https://blog.hubspot.com/sales/rss.xml" },
+    { name: "Planet AI (Aggregator)", url: "https://planet-ai.net/rss.xml" },
+  ];
+  if (!raw) return defaults;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  const parts = raw.split(/[\n,]+/).map((p) => p.trim()).filter(Boolean);
+  if (!parts.length) return defaults;
+  return parts.map((p) => {
+    const [name, url] = p.includes("|") ? p.split("|").map((s) => s.trim()) : [null, p];
+    return { name: name || new URL(url).hostname.replace("www.", ""), url };
+  });
+}
+
+async function fetchFeedItems(url) {
+  const res = await fetch(url, { headers: { "User-Agent": "dashboard-monitor/1.0" } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const xml = await res.text();
+  return parseFeedXml(xml);
+}
+
+function parseFeedXml(xml) {
+  if (xml.includes("<entry")) return parseAtom(xml);
+  return parseRss(xml);
+}
+
+function parseRss(xml) {
+  const items = xml.match(/<item[\s\S]*?<\/item>/gi) || [];
+  return items.map((block) => ({
+    title: extractTag(block, "title"),
+    link: extractTag(block, "link") || extractTag(block, "guid"),
+    published_at: extractTag(block, "pubDate") || extractTag(block, "dc:date") || "",
+    excerpt: stripTags(extractTag(block, "description") || ""),
+  }));
+}
+
+function parseAtom(xml) {
+  const entries = xml.match(/<entry[\s\S]*?<\/entry>/gi) || [];
+  return entries.map((block) => {
+    const linkMatch = block.match(/<link[^>]*href=["']([^"']+)["'][^>]*>/i);
+    return {
+      title: extractTag(block, "title"),
+      link: linkMatch ? linkMatch[1] : "",
+      published_at: extractTag(block, "updated") || extractTag(block, "published") || "",
+      excerpt: stripTags(extractTag(block, "summary") || extractTag(block, "content") || ""),
+    };
+  });
+}
+
+function extractTag(block, tag) {
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
+  const match = block.match(re);
+  if (!match) return "";
+  return decodeEntities(stripCdata(match[1]).trim());
+}
+
+function stripCdata(str) {
+  return str.replace(/^<!\\[CDATA\\[/, "").replace(/\\]\\]>$/, "");
+}
+
+function stripTags(str) {
+  return String(str || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+}
+
+function decodeEntities(str) {
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+async function generateTrendSummary(env, items) {
+  const input = {
+    role: "user",
+    content: `Сформируй короткую сводку трендов AI в продажах и 3-5 практических рекомендаций для лагеря/образовательных смен. Верни JSON строго в формате: {"summary":"...","recommendations":["..."]}. Источники: ${JSON.stringify(items)}`,
+  };
+  const res = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: env.OPENAI_MODEL,
+      input: [input],
+      temperature: 0.2,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    return { summary: "Не удалось получить сводку: " + text, recommendations: [] };
+  }
+  const data = await res.json();
+  const text = extractOpenAIText(data);
+  const cleaned = stripCodeFences(text);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    return { summary: cleaned, recommendations: [] };
+  }
+}
+
+function extractOpenAIText(data) {
+  if (data?.output?.length) {
+    const content = data.output[0]?.content || [];
+    const textPart = content.find((c) => c.type === "output_text");
+    if (textPart?.text) return textPart.text;
+  }
+  if (data?.choices?.length) {
+    return data.choices[0]?.message?.content || "";
+  }
+  return "";
+}
+
+async function generateInsightsSummary(env, analytics, trends) {
+  const trendItems = (trends?.items || []).slice(0, 8).map((item) => ({
+    title: item.title,
+    source: item.source,
+    published_at: item.published_at,
+  }));
+  const input = {
+    role: "user",
+    content:
+      "Сформируй краткое summary (2-3 предложения), вывод (1 предложение) и 3-5 рекомендаций. " +
+      "Опирайся на внутренние данные и внешние тренды. Верни JSON строго в формате: " +
+      '{"summary":"...","conclusion":"...","recommendations":["..."]}. ' +
+      "Пиши по-русски. Данные: " +
+      JSON.stringify({ analytics, trends_summary: trends?.summary, trend_items: trendItems }),
+  };
+  const res = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: env.OPENAI_MODEL,
+      input: [input],
+      temperature: 0.2,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    return { summary: "Не удалось получить сводку: " + text, conclusion: "", recommendations: [] };
+  }
+  const data = await res.json();
+  const text = extractOpenAIText(data);
+  const cleaned = stripCodeFences(text);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    return { summary: cleaned, conclusion: "", recommendations: [] };
+  }
+}
+
+function stripCodeFences(text) {
+  const trimmed = String(text || "").trim();
+  if (trimmed.startsWith("```")) {
+    return trimmed.replace(/^```[a-zA-Z]*\n?/, "").replace(/```$/, "").trim();
+  }
+  return trimmed;
 }
