@@ -31,6 +31,12 @@ const HTML_PAGE = `<!doctype html>
       .insight-value{font-size:16px;font-weight:600}
       .insight-sub{font-size:12px;color:var(--muted)}
       .trend-list{margin-top:14px;display:grid;gap:10px;max-height:260px;overflow:auto}
+      .trend-sections{margin-top:14px;display:grid;gap:12px}
+      .trend-section{padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(12,16,28,.7);display:grid;gap:8px}
+      .trend-section h4{margin:0;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+      .trend-text{font-size:12px;line-height:1.45;color:var(--ink)}
+      .trend-reco-list{display:grid;gap:8px;font-size:12px;color:var(--muted)}
+      .trend-sources{display:grid;gap:8px;max-height:220px;overflow:auto}
       .trend-item{padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(12,16,28,.65);display:grid;gap:6px;font-size:12px}
       .trend-title{font-weight:600;font-size:13px}
       .trend-meta{color:var(--muted);font-size:11px}
@@ -160,9 +166,12 @@ const HTML_PAGE = `<!doctype html>
         </article>
         <article class="panel trends fade-in delay-3">
           <div><h3>AI‑тенденции в продажах</h3><p>Мониторинг мировых источников и рекомендации</p></div>
-          <div class="trend-summary" id="trendSummary">Обновляем сводку…</div>
-          <div class="trend-reco" id="trendRecommendations"></div>
-          <div class="trend-list" id="trendList"></div>
+          <div class="trend-sections">
+            <div class="trend-section"><h4>Summary</h4><div class="trend-text" id="trendSummary">Обновляем сводку…</div></div>
+            <div class="trend-section"><h4>Выводы</h4><div class="trend-text" id="trendConclusion">—</div></div>
+            <div class="trend-section"><h4>Рекомендации</h4><div class="trend-reco-list" id="trendRecommendations"></div></div>
+            <div class="trend-section"><h4>Источники</h4><div class="trend-sources" id="trendSources"></div></div>
+          </div>
           <div class="data-note" id="trendUpdated">—</div>
         </article>
         <article class="panel schedule fade-in delay-3">
@@ -378,24 +387,29 @@ const HTML_PAGE = `<!doctype html>
         yearSummaryMeta.textContent=year.prepaid_rate!=null?"предоплата: "+year.prepaid_rate+"%":"предоплата: —";
         note.textContent=data?.data_quality_note||"Данные обновлены";
       }
-      function renderTrends(data){
+      function renderTrends(trends,insights){
         const summary=document.getElementById("trendSummary");
-        const list=document.getElementById("trendList");
+        const conclusion=document.getElementById("trendConclusion");
+        const sources=document.getElementById("trendSources");
         const recos=document.getElementById("trendRecommendations");
         const updated=document.getElementById("trendUpdated");
 
-        summary.textContent=data?.summary||"Сводка пока недоступна";
-        updated.textContent=data?.updated_at?"обновлено: "+new Date(data.updated_at).toLocaleString(locale):"обновлено: —";
+        const summaryText=insights?.summary||trends?.summary||"Сводка пока недоступна";
+        const conclusionText=insights?.conclusion||"Выводы пока недоступны";
+
+        summary.textContent=summaryText;
+        conclusion.textContent=conclusionText;
+        updated.textContent=trends?.updated_at?"обновлено: "+new Date(trends.updated_at).toLocaleString(locale):"обновлено: —";
 
         recos.innerHTML="";
-        (data?.recommendations||[]).forEach(r=>{
-          const el=document.createElement("div");
-          el.textContent="• "+r;
-          recos.appendChild(el);
-        });
+        const recommendations=insights?.recommendations||trends?.recommendations||[];
+        if(!recommendations.length){recos.innerHTML="<div>—</div>";}
+        else{recommendations.forEach(r=>{const el=document.createElement("div");el.textContent="• "+r;recos.appendChild(el);});}
 
-        list.innerHTML="";
-        (data?.items||[]).slice(0,10).forEach(item=>{
+        sources.innerHTML="";
+        const items=trends?.items||[];
+        if(!items.length){sources.innerHTML="<div>—</div>";}
+        else{items.slice(0,10).forEach(item=>{
           const el=document.createElement("div");
           el.className="trend-item";
           el.innerHTML=
@@ -404,8 +418,8 @@ const HTML_PAGE = `<!doctype html>
             (item.published_at?" · "+escapeHtml(item.published_at):"")+
             '</div>'+
             '<div>'+escapeHtml(item.excerpt||"")+'</div>';
-          list.appendChild(el);
-        });
+          sources.appendChild(el);
+        });}
       }
       function renderInsights(data){
         const summary=document.getElementById("insightsSummary");
@@ -440,7 +454,7 @@ const HTML_PAGE = `<!doctype html>
         try{
           const [analytics,trends,insights]=await Promise.all([getAnalytics(),getTrends(),getInsights()]);
           renderAnalytics(analytics);
-          renderTrends(trends);
+          renderTrends(trends,insights);
           renderInsights(insights);
         }catch(err){console.error("Ошибка аналитики/трендов:",err)}
       }
