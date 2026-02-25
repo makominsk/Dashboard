@@ -1115,7 +1115,6 @@ async function getAnalytics(env) {
     },
     ig_note: igMinDate ? `Instagram метрики доступны с ${igMinDate}` : "Instagram метрики за последние 90 дней",
     bookings_note: "Время заявки недоступно, используется время синхронизации",
-    data_quality_note: "Время суток определить нельзя без timestamp заявки/публикации. Аналитика по дням недели доступна.",
   };
 }
 
