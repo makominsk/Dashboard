@@ -215,6 +215,32 @@
       font-size: 12px;
       color: var(--muted);
     }
+    .analytics-insights {
+      margin-top: 14px;
+      display: grid;
+      gap: 12px;
+    }
+    .analytics-insight {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(12, 16, 28, 0.7);
+      display: grid;
+      gap: 8px;
+    }
+    .analytics-insight h4 {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .analytics-insight p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--ink);
+    }
     .trend-list {
       margin-top: 14px;
       display: grid;
@@ -917,6 +943,16 @@
             <div class="insight-sub" id="yearSummaryMeta">—</div>
           </div>
         </div>
+        <div class="analytics-insights">
+          <div class="analytics-insight">
+            <h4>Summary</h4>
+            <p id="analyticsSummary">—</p>
+          </div>
+          <div class="analytics-insight">
+            <h4>Выводы</h4>
+            <p id="analyticsConclusion">—</p>
+          </div>
+        </div>
         <div class="data-note" id="analyticsNote">Данные готовятся…</div>
       </article>
 
@@ -926,14 +962,6 @@
           <p>Мониторинг мировых источников и рекомендации</p>
         </div>
         <div class="trend-sections">
-          <div class="trend-section">
-            <h4>Summary</h4>
-            <div class="trend-text" id="trendSummary">Обновляем сводку…</div>
-          </div>
-          <div class="trend-section">
-            <h4>Выводы</h4>
-            <div class="trend-text" id="trendConclusion">—</div>
-          </div>
           <div class="trend-section">
             <h4>Рекомендации</h4>
             <div class="trend-reco-list" id="trendRecommendations"></div>
@@ -1372,17 +1400,10 @@
     }
 
     function renderTrends(trends, insights) {
-      const summary = document.getElementById("trendSummary");
-      const conclusion = document.getElementById("trendConclusion");
       const sources = document.getElementById("trendSources");
       const recos = document.getElementById("trendRecommendations");
       const updated = document.getElementById("trendUpdated");
 
-      const summaryText = insights?.summary || trends?.summary || "Сводка пока недоступна";
-      const conclusionText = insights?.conclusion || "Выводы пока недоступны";
-
-      summary.textContent = summaryText;
-      conclusion.textContent = conclusionText;
       updated.textContent = trends?.updated_at
         ? `обновлено: ${new Date(trends.updated_at).toLocaleString(locale)}`
         : "обновлено: —";
@@ -1423,9 +1444,13 @@
       const list = document.getElementById("insightsRecommendations");
       const updated = document.getElementById("insightsUpdated");
       const schedule = document.getElementById("insightsSchedule");
+      const analyticsSummary = document.getElementById("analyticsSummary");
+      const analyticsConclusion = document.getElementById("analyticsConclusion");
 
       summary.textContent = data?.summary || "Сводка пока недоступна";
       conclusion.textContent = data?.conclusion || "Вывод пока недоступен";
+      if (analyticsSummary) analyticsSummary.textContent = data?.summary || "Сводка пока недоступна";
+      if (analyticsConclusion) analyticsConclusion.textContent = data?.conclusion || "Вывод пока недоступен";
 
       list.innerHTML = "";
       (data?.recommendations || []).forEach((item) => {

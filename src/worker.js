@@ -30,6 +30,10 @@ const HTML_PAGE = `<!doctype html>
       .insight-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
       .insight-value{font-size:16px;font-weight:600}
       .insight-sub{font-size:12px;color:var(--muted)}
+      .analytics-insights{margin-top:14px;display:grid;gap:12px}
+      .analytics-insight{padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(12,16,28,.7);display:grid;gap:8px}
+      .analytics-insight h4{margin:0;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+      .analytics-insight p{margin:0;font-size:12px;line-height:1.45;color:var(--ink)}
       .trend-list{margin-top:14px;display:grid;gap:10px;max-height:260px;overflow:auto}
       .trend-sections{margin-top:14px;display:grid;gap:12px}
       .trend-section{padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(12,16,28,.7);display:grid;gap:8px}
@@ -162,13 +166,15 @@ const HTML_PAGE = `<!doctype html>
             <div class="insight-card"><div class="insight-title">Темп заполнения</div><div class="insight-value" id="bookingsPace">—</div><div class="insight-sub" id="bookingsForecast">—</div></div>
             <div class="insight-card"><div class="insight-title">Итоги года</div><div class="insight-value" id="yearSummary">—</div><div class="insight-sub" id="yearSummaryMeta">—</div></div>
           </div>
+          <div class="analytics-insights">
+            <div class="analytics-insight"><h4>Summary</h4><p id="analyticsSummary">—</p></div>
+            <div class="analytics-insight"><h4>Выводы</h4><p id="analyticsConclusion">—</p></div>
+          </div>
           <div class="data-note" id="analyticsNote">Данные готовятся…</div>
         </article>
         <article class="panel trends fade-in delay-3">
           <div><h3>AI‑тенденции в продажах</h3><p>Мониторинг мировых источников и рекомендации</p></div>
           <div class="trend-sections">
-            <div class="trend-section"><h4>Summary</h4><div class="trend-text" id="trendSummary">Обновляем сводку…</div></div>
-            <div class="trend-section"><h4>Выводы</h4><div class="trend-text" id="trendConclusion">—</div></div>
             <div class="trend-section"><h4>Рекомендации</h4><div class="trend-reco-list" id="trendRecommendations"></div></div>
             <div class="trend-section"><h4>Источники</h4><div class="trend-sources" id="trendSources"></div></div>
           </div>
@@ -388,17 +394,10 @@ const HTML_PAGE = `<!doctype html>
         note.textContent=data?.data_quality_note||"Данные обновлены";
       }
       function renderTrends(trends,insights){
-        const summary=document.getElementById("trendSummary");
-        const conclusion=document.getElementById("trendConclusion");
         const sources=document.getElementById("trendSources");
         const recos=document.getElementById("trendRecommendations");
         const updated=document.getElementById("trendUpdated");
 
-        const summaryText=insights?.summary||trends?.summary||"Сводка пока недоступна";
-        const conclusionText=insights?.conclusion||"Выводы пока недоступны";
-
-        summary.textContent=summaryText;
-        conclusion.textContent=conclusionText;
         updated.textContent=trends?.updated_at?"обновлено: "+new Date(trends.updated_at).toLocaleString(locale):"обновлено: —";
 
         recos.innerHTML="";
@@ -427,9 +426,13 @@ const HTML_PAGE = `<!doctype html>
         const list=document.getElementById("insightsRecommendations");
         const updated=document.getElementById("insightsUpdated");
         const schedule=document.getElementById("insightsSchedule");
+        const analyticsSummary=document.getElementById("analyticsSummary");
+        const analyticsConclusion=document.getElementById("analyticsConclusion");
 
         summary.textContent=data?.summary||"Сводка пока недоступна";
         conclusion.textContent=data?.conclusion||"Вывод пока недоступен";
+        if(analyticsSummary)analyticsSummary.textContent=data?.summary||"Сводка пока недоступна";
+        if(analyticsConclusion)analyticsConclusion.textContent=data?.conclusion||"Вывод пока недоступен";
 
         list.innerHTML="";
         (data?.recommendations||[]).forEach(item=>{
